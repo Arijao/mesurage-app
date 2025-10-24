@@ -1209,7 +1209,9 @@
                 <!-- Statistiques des salaires -->
                 <div class="form-section">
                     <h2>💵 Calcul des Salaires</h2>
-                    <div class="stats-grid" style="margin-bottom: 0;">
+                    
+                    <!-- Totaux généraux -->
+                    <div class="stats-grid" style="margin-bottom: 24px;">
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));">
                             <h3 id="totalSalary" style="background: linear-gradient(135deg, #059669, #047857); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
                             <p>Total Salaires à Payer</p>
@@ -1221,6 +1223,16 @@
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));">
                             <h3 id="todaySalary" style="background: linear-gradient(135deg, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
                             <p>Salaires Aujourd'hui</p>
+                        </div>
+                    </div>
+                    
+                    <!-- ⭐ NOUVEAU: Répartition par Qualité -->
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 16px; border: 2px solid rgba(59, 130, 246, 0.1);">
+                        <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                            💎 Répartition des Salaires par Qualité
+                        </h3>
+                        <div id="salaryByQualityGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                            <!-- Cartes générées dynamiquement -->
                         </div>
                     </div>
                 </div>
@@ -1541,6 +1553,66 @@
             <div class="action-buttons">
                 <button class="btn secondary" onclick="closePaymentModal()">❌ Annuler</button>
                 <button class="btn success" onclick="confirmPayment()">✅ Valider Paiement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⭐ NOUVEAU: Modal Détail Poids par Employé -->
+    <div id="employeeWeightsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close" onclick="closeEmployeeWeightsModal()">&times;</span>
+            <h3>⚖️ Détail des Pesages - <span id="weightsModalEmployeeName"></span></h3>
+            
+            <!-- Résumé rapide -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; padding: 16px; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.1);">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #059669;" id="modalTotalWeight">0 kg</div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Poids Total</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #3b82f6;" id="modalTotalPesages">0</div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Pesages</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #f59e0b;" id="modalAvgWeight">0 kg</div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Moyenne</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #16a34a;" id="modalTotalSalary">0 Ar</div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Salaire Total</div>
+                </div>
+            </div>
+            
+            <!-- Filtres -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <input type="month" id="modalMonthFilter" onchange="filterModalWeights()" placeholder="Filtrer par mois">
+                <select id="modalQualityFilter" onchange="filterModalWeights()">
+                    <option value="">Toutes les qualités</option>
+                </select>
+                <button class="btn secondary" onclick="clearModalFilters()">🔄 Effacer Filtres</button>
+            </div>
+            
+            <!-- Tableau détaillé avec scroll -->
+            <div class="table-container" style="max-height: 400px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>📅 Date</th>
+                            <th>💎 Qualité</th>
+                            <th>⚖️ Poids (kg)</th>
+                            <th>💰 Prix/kg (Ar)</th>
+                            <th>💵 Salaire (Ar)</th>
+                            <th>🛠️ Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeWeightsTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn secondary" onclick="closeEmployeeWeightsModal()">Fermer</button>
+                <button class="btn" onclick="exportEmployeeWeights()">📊 Exporter CSV</button>
             </div>
         </div>
     </div>
@@ -2110,6 +2182,8 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
+                updateQualityStats();
+
             };
             
             request.onerror = () => {
@@ -2319,6 +2393,8 @@
                         updateSalaryStats();
                         updateEmployeeStats();
                         updateDailySummary();
+                        updateQualityStats();
+
                     };
                 };
             };
@@ -2339,6 +2415,8 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
+                updateQualityStats();
+
             };
         };
 
@@ -2414,6 +2492,161 @@
                 
                 // Mettre à jour le tableau des salaires par employé
                 updateSalaryTable();
+                updateSalaryByQuality(); // ⭐ NOUVEAU
+                applyThousandSeparators();
+            };
+        };
+
+        // ⭐ NOUVEAU: Mettre à jour répartition salaires par qualité
+        const updateSalaryByQuality = () => {
+            const transaction = db.transaction(['weights'], 'readonly');
+            const store = transaction.objectStore('weights');
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                const weights = request.result;
+                const qualityMap = {};
+                
+                // Grouper par qualité
+                weights.forEach(w => {
+                    const qualityName = getQualityName(w);
+                    const price = getPriceForWeight(w);
+                    const salary = w.weight * price;
+                    
+                    if (!qualityMap[qualityName]) {
+                        qualityMap[qualityName] = {
+                            totalWeight: 0,
+                            totalSalary: 0,
+                            count: 0,
+                            price: price
+                        };
+                    }
+                    
+                    qualityMap[qualityName].totalWeight += w.weight;
+                    qualityMap[qualityName].totalSalary += salary;
+                    qualityMap[qualityName].count += 1;
+                });
+                
+                // Générer les cartes
+                const container = document.getElementById('salaryByQualityGrid');
+                container.innerHTML = '';
+                
+                // Trier par salaire décroissant
+                const sortedQualities = Object.entries(qualityMap)
+                    .sort((a, b) => b[1].totalSalary - a[1].totalSalary);
+                
+                sortedQualities.forEach(([qualityName, data]) => {
+                    // Icône et couleurs dynamiques selon prix
+                    let icon = '💎';
+                    let gradient = 'linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(4, 120, 87, 0.15))';
+                    let textColor = '#059669';
+                    let borderColor = 'rgba(5, 150, 105, 0.3)';
+                    
+                    if (data.price >= 500) {
+                        icon = '⭐';
+                        gradient = 'linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(180, 83, 9, 0.15))';
+                        textColor = '#d97706';
+                        borderColor = 'rgba(217, 119, 6, 0.3)';
+                    } else if (data.price >= 400) {
+                        icon = '💎';
+                        gradient = 'linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(4, 120, 87, 0.15))';
+                        textColor = '#059669';
+                        borderColor = 'rgba(5, 150, 105, 0.3)';
+                    } else if (data.price >= 300) {
+                        icon = '✓';
+                        gradient = 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15))';
+                        textColor = '#3b82f6';
+                        borderColor = 'rgba(59, 130, 246, 0.3)';
+                    } else if (data.price > 0) {
+                        icon = '○';
+                        gradient = 'linear-gradient(135deg, rgba(100, 116, 139, 0.15), rgba(71, 85, 105, 0.15))';
+                        textColor = '#64748b';
+                        borderColor = 'rgba(100, 116, 139, 0.3)';
+                    }
+                    
+                    const avgWeight = data.totalWeight / data.count;
+                    const percentTotal = sortedQualities.length > 0 ? 
+                        (data.totalSalary / sortedQualities.reduce((sum, [_, d]) => sum + d.totalSalary, 0) * 100) : 0;
+                    
+                    const card = document.createElement('div');
+                    card.style.cssText = `
+                        background: ${gradient};
+                        padding: 20px;
+                        border-radius: 16px;
+                        border: 2px solid ${borderColor};
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                    `;
+                    
+                    card.onmouseover = () => {
+                        card.style.transform = 'translateY(-4px)';
+                        card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+                    };
+                    card.onmouseout = () => {
+                        card.style.transform = 'translateY(0)';
+                        card.style.boxShadow = 'none';
+                    };
+                    
+                    card.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                            <span style="font-size: 1.5rem;">${icon}</span>
+                            <span style="background: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: ${textColor};">
+                                ${percentTotal.toFixed(1)}%
+                            </span>
+                        </div>
+                        
+                        <div style="margin-bottom: 8px;">
+                            <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 4px;">
+                                ${qualityName}
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
+                                ${data.price.toLocaleString('fr-FR')} Ar/kg
+                            </div>
+                        </div>
+                        
+                        <div style="height: 1px; background: ${borderColor}; margin: 12px 0;"></div>
+                        
+                        <div style="display: grid; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                <span style="color: #64748b;">Poids:</span>
+                                <span style="font-weight: 700; color: #1e293b;">${data.totalWeight.toFixed(1)} kg</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                <span style="color: #64748b;">Pesages:</span>
+                                <span style="font-weight: 700; color: #1e293b;">${data.count}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                <span style="color: #64748b;">Moyenne:</span>
+                                <span style="font-weight: 700; color: #1e293b;">${avgWeight.toFixed(1)} kg</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 4px;">
+                                    SALAIRE TOTAL
+                                </div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: ${textColor};">
+                                    ${data.totalSalary.toLocaleString('fr-FR')} Ar
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+                
+                // Message si aucune donnée
+                if (sortedQualities.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+                            <div style="font-size: 3rem; margin-bottom: 12px;">📊</div>
+                            <div style="font-size: 1.1rem; font-weight: 600;">Aucune donnée disponible</div>
+                            <div style="font-size: 0.9rem; margin-top: 8px;">Enregistrez des pesages pour voir les statistiques</div>
+                        </div>
+                    `;
+                }
+                
                 applyThousandSeparators();
             };
         };
@@ -2482,9 +2715,15 @@
                         </div>
                         
                         <div style="margin-bottom: 12px;">
-                            <div class="stat-item">
+                            <div class="stat-item" style="cursor: pointer; transition: all 0.2s ease;" 
+                                 onmouseover="this.style.background='rgba(5, 150, 105, 0.05)'" 
+                                 onmouseout="this.style.background='transparent'"
+                                 onclick="openEmployeeWeightsModal(${employee.id}, '${employee.name}')">
                                 <span class="stat-label">⚖️ Poids Total</span>
-                                <span class="stat-value">${totalWeight.toFixed(1)} kg</span>
+                                <span class="stat-value" style="color: #059669; display: flex; align-items: center; gap: 8px;">
+                                    ${totalWeight.toFixed(1)} kg
+                                    <span style="font-size: 0.75rem; opacity: 0.7;">🔍 Voir détail</span>
+                                </span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">📊 Nombre de Pesages</span>
@@ -2984,9 +3223,22 @@
 
         // Fermer le modal en cliquant à l'extérieur
         window.onclick = (event) => {
-            const modal = document.getElementById('editEmployeeModal');
-            if (event.target === modal) {
+            const editModal = document.getElementById('editEmployeeModal');
+            const weightsModal = document.getElementById('employeeWeightsModal');
+            const paymentModal = document.getElementById('paymentModal');
+            const editPaymentModal = document.getElementById('editPaymentModal');
+            
+            if (event.target === editModal) {
                 closeEditEmployeeModal();
+            }
+            if (event.target === weightsModal) {
+                closeEmployeeWeightsModal();
+            }
+            if (event.target === paymentModal) {
+                closePaymentModal();
+            }
+            if (event.target === editPaymentModal) {
+                closeEditPaymentModal();
             }
         };
 
@@ -3260,6 +3512,210 @@
         let currentPaymentEmployee = null;
         let currentPaymentReste = 0;
         let currentEditingPaymentId = null;
+        // ⭐ NOUVEAU: Variables pour modal détail poids
+        let currentModalEmployeeId = null;
+        let currentModalEmployeeName = '';
+        let allModalWeights = [];
+        let filteredModalWeights = [];
+
+        // ⭐ NOUVEAU: Ouvrir modal détail poids employé
+        const openEmployeeWeightsModal = (employeeId, employeeName) => {
+            currentModalEmployeeId = employeeId;
+            currentModalEmployeeName = employeeName;
+            
+            document.getElementById('weightsModalEmployeeName').textContent = employeeName;
+            
+            const transaction = db.transaction(['weights'], 'readonly');
+            const store = transaction.objectStore('weights');
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                allModalWeights = request.result.filter(w => w.employeeId === employeeId);
+                
+                // Trier par date décroissante
+                allModalWeights.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Remplir le filtre qualités
+                const qualities = [...new Set(allModalWeights.map(w => getQualityName(w)))];
+                const qualityFilter = document.getElementById('modalQualityFilter');
+                qualityFilter.innerHTML = '<option value="">Toutes les qualités</option>';
+                qualities.forEach(q => {
+                    qualityFilter.innerHTML += `<option value="${q}">${q}</option>`;
+                });
+                
+                // Afficher tout par défaut
+                filteredModalWeights = [...allModalWeights];
+                displayModalWeights();
+                updateModalStats();
+                
+                document.getElementById('employeeWeightsModal').style.display = 'block';
+            };
+        };
+
+        // ⭐ NOUVEAU: Afficher les poids dans le modal
+        const displayModalWeights = () => {
+            const tbody = document.getElementById('employeeWeightsTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredModalWeights.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            📭 Aucun pesage trouvé
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredModalWeights.forEach(w => {
+                const qualityName = getQualityName(w);
+                const price = getPriceForWeight(w);
+                const salary = w.weight * price;
+                
+                // Icône dynamique
+                let icon = '💎';
+                let bgColor = 'rgba(5, 150, 105, 0.1)';
+                let textColor = '#059669';
+                let borderColor = 'rgba(5, 150, 105, 0.2)';
+                
+                if (price >= 500) {
+                    icon = '⭐';
+                    bgColor = 'rgba(217, 119, 6, 0.1)';
+                    textColor = '#d97706';
+                    borderColor = 'rgba(217, 119, 6, 0.2)';
+                } else if (price >= 400) {
+                    icon = '💎';
+                } else if (price >= 300) {
+                    icon = '✓';
+                    bgColor = 'rgba(59, 130, 246, 0.1)';
+                    textColor = '#3b82f6';
+                    borderColor = 'rgba(59, 130, 246, 0.2)';
+                } else if (price > 0) {
+                    icon = '○';
+                    bgColor = 'rgba(100, 116, 139, 0.1)';
+                    textColor = '#64748b';
+                    borderColor = 'rgba(100, 116, 139, 0.2)';
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 600;">${new Date(w.date).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                        <span class="quality-badge" style="background: ${bgColor}; color: ${textColor}; border-color: ${borderColor};">
+                            ${icon} ${qualityName}
+                        </span>
+                    </td>
+                    <td style="font-weight: 700; color: #1e293b;">${w.weight.toFixed(1)} kg</td>
+                    <td style="font-weight: 600; color: ${textColor};">${price.toLocaleString('fr-FR')} Ar</td>
+                    <td style="font-weight: 700; color: #047857;">${salary.toLocaleString('fr-FR')} Ar</td>
+                    <td>
+                        <button class="edit-btn" onclick="editWeight(${w.id})" style="padding: 6px 12px; font-size: 0.8rem;">✏️</button>
+                        <button class="delete-btn" onclick="deleteWeightFromModal(${w.id})" style="padding: 6px 12px; font-size: 0.8rem;">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            applyThousandSeparators();
+        };
+
+        // ⭐ NOUVEAU: Mettre à jour les stats du modal
+        const updateModalStats = () => {
+            const totalWeight = filteredModalWeights.reduce((sum, w) => sum + w.weight, 0);
+            const totalSalary = filteredModalWeights.reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
+            const avgWeight = filteredModalWeights.length > 0 ? totalWeight / filteredModalWeights.length : 0;
+            
+            document.getElementById('modalTotalWeight').textContent = totalWeight.toFixed(1) + ' kg';
+            document.getElementById('modalTotalPesages').textContent = filteredModalWeights.length;
+            document.getElementById('modalAvgWeight').textContent = avgWeight.toFixed(1) + ' kg';
+            document.getElementById('modalTotalSalary').textContent = totalSalary.toLocaleString('fr-FR') + ' Ar';
+        };
+
+        // ⭐ NOUVEAU: Filtrer les poids dans le modal
+        const filterModalWeights = () => {
+            const monthFilter = document.getElementById('modalMonthFilter').value;
+            const qualityFilter = document.getElementById('modalQualityFilter').value;
+            
+            filteredModalWeights = allModalWeights.filter(w => {
+                let match = true;
+                
+                // Filtre mois
+                if (monthFilter) {
+                    const weightMonth = w.date.substring(0, 7); // YYYY-MM
+                    match = match && (weightMonth === monthFilter);
+                }
+                
+                // Filtre qualité
+                if (qualityFilter) {
+                    match = match && (getQualityName(w) === qualityFilter);
+                }
+                
+                return match;
+            });
+            
+            displayModalWeights();
+            updateModalStats();
+        };
+
+        // ⭐ NOUVEAU: Effacer filtres modal
+        const clearModalFilters = () => {
+            document.getElementById('modalMonthFilter').value = '';
+            document.getElementById('modalQualityFilter').value = '';
+            filteredModalWeights = [...allModalWeights];
+            displayModalWeights();
+            updateModalStats();
+        };
+
+        // ⭐ NOUVEAU: Fermer modal
+        const closeEmployeeWeightsModal = () => {
+            document.getElementById('employeeWeightsModal').style.display = 'none';
+            currentModalEmployeeId = null;
+            currentModalEmployeeName = '';
+            allModalWeights = [];
+            filteredModalWeights = [];
+        };
+
+        // ⭐ NOUVEAU: Supprimer poids depuis modal (avec refresh)
+        const deleteWeightFromModal = (id) => {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce pesage?')) return;
+            
+            const transaction = db.transaction(['weights'], 'readwrite');
+            const store = transaction.objectStore('weights');
+            
+            const request = store.delete(id);
+            request.onsuccess = () => {
+                // Recharger les données du modal
+                openEmployeeWeightsModal(currentModalEmployeeId, currentModalEmployeeName);
+                
+                // Mettre à jour les autres vues
+                loadWeights();
+                updateStats();
+                updateSalaryStats();
+                updateEmployeeStats();
+                loadEmployeeManagement();
+            };
+        };
+
+        // ⭐ NOUVEAU: Exporter CSV pour cet employé uniquement
+        const exportEmployeeWeights = () => {
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "Date,Poids (kg),Qualité,Prix/kg (Ar),Salaire (Ar)\n"
+                + filteredModalWeights.map(w => {
+                    const quality = getQualityName(w);
+                    const price = getPriceForWeight(w);
+                    const salary = w.weight * price;
+                    return `${w.date},${w.weight},"${quality}",${price},${salary}`;
+                }).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `pesages_${currentModalEmployeeName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
 
         const openPaymentModal = (id, name, reste, totalSalary, alreadyPaid) => {
             currentPaymentEmployee = id;
@@ -3367,9 +3823,59 @@
             }
 
             const transaction = db.transaction(['payments'], 'readwrite');
-            const store = transaction.objectStore('payments');        
+            const store = transaction.objectStore('payments');
+            
+            const request = store.get(currentEditingPaymentId);
+            
+            request.onsuccess = () => {
+                const payment = request.result;
+                if (payment) {
+                    payment.amount = amount;
+                    payment.date = date;
+                    payment.note = note || null;
+                    payment.updatedAt = new Date().toISOString();
+                    
+                    const updateRequest = store.put(payment);
+                    
+                    updateRequest.onsuccess = () => {
+                        alert("✅ Paiement modifié avec succès!");
+                        closeEditPaymentModal();
+                        updateEmployeeStats();
+                        updateSalaryStats();
+                    };
+                    
+                    updateRequest.onerror = () => {
+                        alert("❌ Erreur lors de la modification!");
+                    };
+                }
+            };
+            
+            request.onerror = () => {
+                alert("❌ Paiement introuvable!");
+            };
+        };
         
-        }    
+        // Supprimer un paiement
+        const deletePayment = (paymentId) => {
+            if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce paiement?')) {
+                return;
+            }
+            
+            const transaction = db.transaction(['payments'], 'readwrite');
+            const store = transaction.objectStore('payments');
+            const request = store.delete(paymentId);
+            
+            request.onsuccess = () => {
+                alert("✅ Paiement supprimé avec succès!");
+                updateEmployeeStats();
+                updateSalaryStats();
+            };
+            
+            request.onerror = () => {
+                alert("❌ Erreur lors de la suppression!");
+            };
+        };
+        
         // -------------------------------
         // Helpers formatting (séparateur de milliers)
         // -------------------------------
@@ -3777,10 +4283,13 @@
 
         // ⭐ BONUS: Statistiques par qualité
         const updateQualityStats = () => {
-            const transaction = db.transaction(['weights'], 'readonly');
+            const transaction = db.transaction(['weights', 'avances'], 'readonly');
+
             const store = transaction.objectStore('weights');
             const request = store.getAll();
-            
+            const avanceStore = transaction.objectStore('avances');
+            const avanceRequest = avanceStore.getAll();
+
             request.onsuccess = () => {
                 const weights = request.result;
                 const qualityMap = {};
