@@ -1097,6 +1097,26 @@
             border: 1px solid var(--badge-border, rgba(5, 150, 105, 0.2));
         }
 
+       /* ⭐ NOUVEAU: dark mode */ 
+       :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: white;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
     </style>
 </head>
 <body>
@@ -1553,6 +1573,12 @@
         </div>
     </div>
 
+    <!-- Dans header -->
+    <div style="position: absolute; top: 20px; right: 20px;">
+        <button onclick="toggleDarkMode()" style="background: rgba(255,255,255,0.2); border: none; padding: 10px 20px; border-radius: 12px; color: white; cursor: pointer; font-weight: 600;">
+            🌙 Mode Sombre
+        </button>
+    </div>
 
     <script>
         // Configuration IndexedDB
@@ -3800,6 +3826,19 @@
                 });
             };
         };
+
+        const toggleDarkMode = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        };
+
+        // Charger au démarrage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
 
     </script>
 </body>
