@@ -4283,12 +4283,12 @@
 
         // ⭐ BONUS: Statistiques par qualité
         const updateQualityStats = () => {
-            const transaction = db.transaction(['weights', 'avances'], 'readonly');
+            const transaction = db.transaction(['weights'], 'readonly');
 
             const store = transaction.objectStore('weights');
             const request = store.getAll();
-            const avanceStore = transaction.objectStore('avances');
-            const avanceRequest = avanceStore.getAll();
+            
+            
 
             request.onsuccess = () => {
                 const weights = request.result;
