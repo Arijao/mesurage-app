@@ -1263,14 +1263,6 @@
                     </div>
                 </div>
 
-                <!-- ⭐ BONUS: Statistiques par Qualité -->
-                <div class="form-section">
-                    <h2>📊 Répartition par Qualité</h2>
-                    <div id="qualityStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                        <!-- Généré dynamiquement -->
-                    </div>
-                </div>
-
                 <!-- ⭐ NOUVEAU: Statistiques Quotidiennes par Qualité -->
                 <div class="form-section">
                     <h2>📅 Statistiques Quotidiennes par Qualité</h2>
@@ -2457,7 +2449,7 @@
                 document.getElementById('overallTotal').textContent = overallTotal.toFixed(1) + ' kg';
                 updateSalaryStats();
                 applyThousandSeparators();
-                updateQualityStats();
+                
             });
         };
 
@@ -2499,12 +2491,17 @@
 
         // ⭐ NOUVEAU: Mettre à jour répartition salaires par qualité
         const updateSalaryByQuality = () => {
-            const transaction = db.transaction(['weights'], 'readonly');
-            const store = transaction.objectStore('weights');
-            const request = store.getAll();
+            const transaction = db.transaction(['weights', 'payments'], 'readonly');
+            const weightStore = transaction.objectStore('weights');
+            const paymentStore = transaction.objectStore('payments');
             
-            request.onsuccess = () => {
-                const weights = request.result;
+            const weightRequest = weightStore.getAll();
+            const paymentRequest = paymentStore.getAll();
+            
+            Promise.all([
+                new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
+                new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
+            ]).then(([weights, payments]) => {
                 const qualityMap = {};
                 
                 // Grouper par qualité
@@ -2526,6 +2523,11 @@
                     qualityMap[qualityName].totalSalary += salary;
                     qualityMap[qualityName].count += 1;
                 });
+                
+                // ⭐ NOUVEAU: Calculer total des paiements
+                const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+                const totalSalary = Object.values(qualityMap).reduce((sum, q) => sum + q.totalSalary, 0);
+                const netSalary = totalSalary - totalPayments;
                 
                 // Générer les cartes
                 const container = document.getElementById('salaryByQualityGrid');
@@ -2636,6 +2638,39 @@
                     container.appendChild(card);
                 });
                 
+                // ⭐ NOUVEAU: Carte récapitulative FINALE
+                const summaryCard = document.createElement('div');
+                summaryCard.style.cssText = `
+                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+                    padding: 24px;
+                    border-radius: 16px;
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    color: white;
+                    grid-column: 1 / -1;
+                `;
+                
+                summaryCard.innerHTML = `
+                    <h4 style="color: white; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; text-align: center;">
+                        📊 RÉCAPITULATIF GLOBAL
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">💰 Salaires Bruts</div>
+                            <div style="font-size: 1.8rem; font-weight: 800;">${totalSalary.toLocaleString('fr-FR')} Ar</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">✅ Avances Payées</div>
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #60a5fa;">${totalPayments.toLocaleString('fr-FR')} Ar</div>
+                        </div>
+                        <div style="background: ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; padding: 16px; border-radius: 12px; text-align: center; border: 2px solid ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'};">
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 6px; font-weight: 700;">⚠️ RESTE À PAYER</div>
+                            <div style="font-size: 2rem; font-weight: 900; color: ${netSalary >= 0 ? '#22c55e' : '#ef4444'};">${netSalary.toLocaleString('fr-FR')} Ar</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(summaryCard);
+                
                 // Message si aucune donnée
                 if (sortedQualities.length === 0) {
                     container.innerHTML = `
@@ -2648,7 +2683,7 @@
                 }
                 
                 applyThousandSeparators();
-            };
+            });
         };
 
         // Mettre à jour les statistiques par employé (avec paiements)
@@ -4281,61 +4316,7 @@
             updateDailyQualityStats();
         };
 
-        // ⭐ BONUS: Statistiques par qualité
-        const updateQualityStats = () => {
-            const transaction = db.transaction(['weights'], 'readonly');
-
-            const store = transaction.objectStore('weights');
-            const request = store.getAll();
-            
-            
-
-            request.onsuccess = () => {
-                const weights = request.result;
-                const qualityMap = {};
-                
-                weights.forEach(w => {
-                    const qualityName = getQualityName(w);
-                    const price = getPriceForWeight(w);
-                    
-                    if (!qualityMap[qualityName]) {
-                        qualityMap[qualityName] = {
-                            totalWeight: 0,
-                            count: 0,
-                            totalSalary: 0,
-                            avgPrice: price
-                        };
-                    }
-                    
-                    qualityMap[qualityName].totalWeight += w.weight;
-                    qualityMap[qualityName].count += 1;
-                    qualityMap[qualityName].totalSalary += (w.weight * price);
-                });
-                
-                const container = document.getElementById('qualityStats');
-                container.innerHTML = '';
-                
-                Object.keys(qualityMap).forEach(qualityName => {
-                    const data = qualityMap[qualityName];
-                    const card = document.createElement('div');
-                    card.className = 'stat-card';
-                    card.innerHTML = `
-                        <h3 style="font-size: 1.2rem; margin-bottom: 8px;">${qualityName}</h3>
-                        <div style="font-size: 2rem; font-weight: 800; color: #059669; margin-bottom: 8px;">
-                            ${data.totalWeight.toFixed(1)} kg
-                        </div>
-                        <div style="color: #64748b; font-size: 0.9rem;">
-                            ${data.count} pesage(s)
-                        </div>
-                        <div style="color: #3b82f6; font-size: 1rem; font-weight: 600; margin-top: 8px;">
-                            ${data.totalSalary.toLocaleString('fr-FR')} Ar
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            };
-        };
-
+        
         const toggleDarkMode = () => {
             const current = document.documentElement.getAttribute('data-theme');
             const newTheme = current === 'dark' ? 'light' : 'dark';
