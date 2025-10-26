@@ -1417,7 +1417,6 @@
                     </div>
                     
                     <div class="import-export-section">
-                    <div class="import-export-section">
                         <div class="file-input-wrapper">
                             <input type="file" id="jsonFileInput" accept=".json" onchange="importJSON()">
                             <label for="jsonFileInput" class="file-input-label">📥 Importer JSON</label>
@@ -2174,7 +2173,7 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
-                updateQualityStats();
+                updateDailyQualityStats();
 
             };
             
@@ -2385,7 +2384,7 @@
                         updateSalaryStats();
                         updateEmployeeStats();
                         updateDailySummary();
-                        updateQualityStats();
+                        updateDailyQualityStats();
 
                     };
                 };
@@ -2407,7 +2406,7 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
-                updateQualityStats();
+                updateDailyQualityStats();
 
             };
         };
@@ -2913,7 +2912,7 @@
             const weightRequest = weightStore.getAll();
             
             weightRequest.onsuccess = () => {
-                const weights = request.result;
+                const weights = weightRequest.result;  // ⭐ CORRECTION
                 const dailyWeights = weights.filter(w => w.date === selectedDate);
                 
                 const totalWeight = dailyWeights.reduce((sum, w) => sum + w.weight, 0);
@@ -3183,11 +3182,11 @@
                     // ⬆️⬆️⬆️ FARANY FANOVANA 2 ⬆️⬆️⬆️
                     
                     transaction.oncomplete = () => {
-                        loadCurrentPrice(); // ⬅️ VAOVAO: Mamerina mamaky ny prix
+                        loadDefaultPrice(); // ⭐ CORRECTION: loadCurrentPrice → loadDefaultPrice
                         loadAllEmployees();
                         loadWeights();
                         updateStats();
-                        updateSalaryStats(); // ⬅️ VAOVAO: Manavao ny statistiques des salaires
+                        updateSalaryStats();
                         updateEmployeeStats();
                         loadEmployeeManagement();
                         showMessage('importSuccessMsg', 'Données importées avec succès!');
@@ -3223,16 +3222,17 @@
             priceStore.clear(); // ⬅️ VAOVAO: Manadio ny table prices koa
             
             transaction.oncomplete = () => {
-                // ⬇️⬇️⬇️ FANOVANA 2: Mamerina ny prix ho 0 ⬇️⬇️⬇️
-                currentPricePerKg = 0; // ⬅️ VAOVAO
-                document.getElementById('currentPrice').textContent = '0 Ar'; // ⬅️ VAOVAO
-                document.getElementById('pricePerKg').value = ''; // ⬅️ VAOVAO
-                // ⬆️⬆️⬆️ FARANY FANOVANA 2 ⬆️⬆️⬆️
+                // Réinitialiser le prix par défaut
+                currentPricePerKg = 0;
+                const defaultPriceEl = document.getElementById('currentDefaultPrice');
+                const defaultInputEl = document.getElementById('defaultPricePerKg');
+                if (defaultPriceEl) defaultPriceEl.textContent = '0 Ar';
+                if (defaultInputEl) defaultInputEl.value = '';
                 
                 loadAllEmployees();
                 loadWeights();
                 updateStats();
-                updateSalaryStats(); // ⬅️ VAOVAO: Manavao ny statistiques des salaires
+                updateSalaryStats();
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 
