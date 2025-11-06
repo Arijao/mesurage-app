@@ -3452,42 +3452,50 @@
         };
 
         // Exporter les données JSON
+        // Exporter les données JSON (version corrigée: inclut payments)
         const exportJSON = () => {
-            const transaction = db.transaction(['weights', 'employees', 'prices'], 'readonly');
+            const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readonly');
             const weightStore = transaction.objectStore('weights');
             const employeeStore = transaction.objectStore('employees');
             const priceStore = transaction.objectStore('prices');
-            
+            const paymentStore = transaction.objectStore('payments');
+
             const weightRequest = weightStore.getAll();
             const employeeRequest = employeeStore.getAll();
             const priceRequest = priceStore.getAll();
-            
+            const paymentRequest = paymentStore.getAll();
+
             Promise.all([
                 new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
                 new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); }),
-                new Promise(resolve => { priceRequest.onsuccess = () => resolve(priceRequest.result); })
-            ]).then(([weights, employees, prices]) => { // ⬅️ AMPIANA "prices" ETO!
+                new Promise(resolve => { priceRequest.onsuccess = () => resolve(priceRequest.result); }),
+                new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
+            ]).then(([weights, employees, prices, payments]) => {
                 const exportData = {
                     employees: employees,
                     weights: weights,
                     prices: prices,
+                    payments: payments,
                     exportDate: new Date().toISOString(),
                     version: "2.0"
                 };
-                
+
                 const dataStr = JSON.stringify(exportData, null, 2);
                 const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                
+
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(dataBlob);
                 link.download = `pesage_vanille_backup_${new Date().toISOString().split('T')[0]}.json`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
+
                 showMessage('importSuccessMsg', 'Données exportées avec succès!');
+            }).catch(err => {
+                showMessage('importErrorMsg', 'Erreur lors de l\'exportation: ' + (err && err.message));
             });
         };
+
 
         // Importer les données JSON
         const importJSON = () => {
@@ -3513,35 +3521,45 @@
                         return;
                     }
                     
-                    // ⬇️⬇️⬇️ FANOVANA 1: Manampy 'prices' ⬇️⬇️⬇️
-                    const transaction = db.transaction(['weights', 'employees', 'prices'], 'readwrite');
+                    // Dans importJSON() reader.onload ...
+                    // ... après avoir vérifié importData.employees et importData.weights
+
+                    const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readwrite');
                     const weightStore = transaction.objectStore('weights');
                     const employeeStore = transaction.objectStore('employees');
-                    const priceStore = transaction.objectStore('prices'); // ⬅️ VAOVAO
-                    
+                    const priceStore = transaction.objectStore('prices');
+                    const paymentStore = transaction.objectStore('payments'); // <-- nouvel ajout
+
                     // Vider les tables existantes
                     weightStore.clear();
                     employeeStore.clear();
-                    priceStore.clear(); // ⬅️ VAOVAO: Manadio ny table prices koa
-                    
+                    priceStore.clear();
+                    paymentStore.clear(); // <-- vider les paiements aussi
+
                     // Importer les employés
                     importData.employees.forEach(employee => {
                         employeeStore.add(employee);
                     });
-                    
+
                     // Importer les poids
                     importData.weights.forEach(weight => {
                         weightStore.add(weight);
                     });
-                    
-                    // ⬇️⬇️⬇️ FANOVANA 2: Mampiditra ny prices ⬇️⬇️⬇️
+
                     // Importer les prix si disponibles
                     if (importData.prices) {
                         importData.prices.forEach(price => {
                             priceStore.add(price);
                         });
                     }
-                    // ⬆️⬆️⬆️ FARANY FANOVANA 2 ⬆️⬆️⬆️
+
+                    // Importer les paiements si disponibles
+                    if (importData.payments) {
+                        importData.payments.forEach(payment => {
+                            paymentStore.add(payment);
+                        });
+                    }
+
                     
                     transaction.oncomplete = () => {
                         loadCurrentPrice(); // ⬅️ VAOVAO: Mamerina mamaky ny prix
@@ -3573,15 +3591,17 @@
             
             if (!confirm('DERNIÈRE CONFIRMATION: Toutes les données seront perdues définitivement. Continuer?')) return;
             
-            // ⬇️⬇️⬇️ FANOVANA 1: Manampy 'prices' ⬇️⬇️⬇️
-            const transaction = db.transaction(['weights', 'employees', 'prices'], 'readwrite');
+            const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readwrite');
             const weightStore = transaction.objectStore('weights');
             const employeeStore = transaction.objectStore('employees');
-            const priceStore = transaction.objectStore('prices'); // ⬅️ VAOVAO
-            
+            const priceStore = transaction.objectStore('prices');
+            const paymentStore = transaction.objectStore('payments');
+
             weightStore.clear();
             employeeStore.clear();
-            priceStore.clear(); // ⬅️ VAOVAO: Manadio ny table prices koa
+            priceStore.clear();
+            paymentStore.clear();
+
             
             transaction.oncomplete = () => {
                 // ⬇️⬇️⬇️ FANOVANA 2: Mamerina ny prix ho 0 ⬇️⬇️⬇️
