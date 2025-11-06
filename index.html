@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesage Vanille - Suivi quotidien</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
@@ -1053,6 +1054,59 @@
         }
 
         /* ⭐ NOUVEAU: Styles pour statistiques quotidiennes par qualité */
+        /* FILTRE PERSONNALISABLE */
+        .filter-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 12px;
+            border: 2px solid rgba(59, 130, 246, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-inputs input {
+            width: 100%;
+        }
+
+        .highlight-over {
+            background: rgba(220, 38, 38, 0.1) !important;
+            border: 2px solid rgba(220, 38, 38, 0.3) !important;
+            font-weight: 700 !important;
+        }
+
+        .highlight-under {
+            background: rgba(22, 163, 74, 0.1) !important;
+            border: 2px solid rgba(22, 163, 74, 0.3) !important;
+            font-weight: 700 !important;
+        }
+
+        .out-of-range-list {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+        }
+
+        .out-of-range-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .over-item {
+            background: rgba(220, 38, 38, 0.08);
+            border: 2px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .under-item {
+            background: rgba(22, 163, 74, 0.08);
+            border: 2px solid rgba(22, 163, 74, 0.2);
+        }
         .daily-quality-card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
             backdrop-filter: blur(10px);
@@ -1109,8 +1163,174 @@
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            --text-secondary: #cbd5e1;
         }
+
+        /* Fond de la carte salaire */
+        [data-theme="dark"] .salary-summary {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.18));
+            border: 2px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Labels noirs */
+        [data-theme="dark"] .salary-row span:first-child {
+            color: #111827 !important;  /* noir/gris anthracite profond */
+            font-weight: 700;
+        }
+
+        /* Valeurs colorées à droite */
+        [data-theme="dark"] .salary-total {
+            color: #22c55e !important;  /* vert vif */
+            font-weight: 700;
+        }
+
+        [data-theme="dark"] .salary-paid {
+            color: #0ea5e9 !important;  /* bleu vif */
+            font-weight: 700;
+        }
+
+        [data-theme="dark"] .salary-remaining {
+            color: #ef4444 !important;  /* rouge vif */
+            font-weight: 700;
+        }
+
+        /* Texte général */
+        [data-theme="dark"] .salary-row {
+            color: var(--text-primary) !important;
+        }
+
+
+        /* ⭐ SYSTÈME D'ALERTE EMPLOYÉ */
+        .employee-alert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15));
+            border: 2px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #d97706;
+            margin-left: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .employee-alert-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+            backdrop-filter: blur(20px);
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(245, 158, 11, 0.3);
+            border: 3px solid rgba(245, 158, 11, 0.5);
+            max-width: 500px;
+            width: 90%;
+            z-index: 10000;
+            animation: alertSlideIn 0.3s ease;
+        }
+
+        @keyframes alertSlideIn {
+            from {
+                transform: translate(-50%, -60%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        .alert-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+        }
+
+        .alert-icon {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .alert-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #d97706;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .alert-message {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #92400e;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .alert-note-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(203, 213, 225, 0.8);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .alert-btn-ok {
+            flex: 1;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-btn-ok:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+        }
+
 
         body {
             background: var(--bg-primary);
@@ -1142,6 +1362,20 @@
                 <!-- Gestion des employés -->
                 <div class="form-section">
                     <h2>👥 Gestion des Employés</h2>
+                    <div style="display:flex; gap:8px; margin:8px 0;">
+                        <input id="employeeManageSearch" 
+                            type="text" 
+                            placeholder="🔍 Rechercher..." 
+                            oninput="filterManageEmployees()" 
+                            style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                        
+                        <button onclick="clearEmployeeManageSearch()" 
+                            style="padding:8px 12px; border-radius:6px; background:#f43f5e; color:white; border:none;">
+                            ✖️
+                        </button>
+                    </div>
+
+
                     <div class="success-message" id="employeeManagementSuccessMsg">Opération réussie!</div>
                     <div class="error-message" id="employeeManagementErrorMsg">Une erreur s'est produite!</div>
                     <div class="table-container">
@@ -1264,8 +1498,55 @@
                 </div>
 
                 <!-- ⭐ NOUVEAU: Statistiques Quotidiennes par Qualité -->
+                <!-- ⭐ NOUVEAU: Statistiques Quotidiennes par Qualité AMÉLIORÉES -->
                 <div class="form-section">
                     <h2>📅 Statistiques Quotidiennes par Qualité</h2>
+
+                    <!-- ⭐ RECHERCHE INTELLIGENTE EMPLOYÉ -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                            🔍 Rechercher un Employé
+                        </label>
+                        <div style="position: relative; z-index: 100;">
+                            <input type="text" 
+                                id="dailyStatsEmployeeSearch" 
+                                placeholder="Tapez le nom de l'employé..." 
+                                autocomplete="off"
+                                onkeyup="filterDailyStatsByEmployee()"
+                                onfocus="showDailyStatsEmployeeDropdown()"
+                                style="width: 100%; padding: 16px 20px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 16px; font-size: 1rem; font-weight: 500; background: rgba(255, 255, 255, 0.9);">
+                            <div id="dailyStatsEmployeeDropdown" class="employee-dropdown" style="display: none; max-width: 100%;"></div>
+                            <input type="hidden" id="selectedDailyStatsEmployeeId" value="">
+                        </div>
+                        <div id="selectedEmployeeInfo" style="display: none; margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #1e40af; font-weight: 600;">
+                                    👤 Filtré par: <strong id="selectedEmployeeNameDisplay"></strong>
+                                </span>
+                                <button onclick="clearDailyStatsEmployeeFilter()" 
+                                        style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">
+                                    ✕ Effacer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NOUVEAU: Filtres personnalisables -->
+                    <div class="filter-inputs">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                                ⬇️ Poids Minimum (kg)
+                            </label>
+                            <input type="number" id="minWeightFilter" placeholder="Ex: 3" step="0.1" min="0">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                                ⬆️ Poids Maximum (kg)
+                            </label>
+                            <input type="number" id="maxWeightFilter" placeholder="Ex: 10" step="0.1" min="0">
+                        </div>
+                    </div>
+
                     <div class="form-group" style="margin-bottom: 20px;">
                         <input type="date" id="dailyStatsDate" required>
                         <button class="btn" onclick="updateDailyQualityStats()">🔍 Afficher Statistiques du Jour</button>
@@ -1298,6 +1579,23 @@
                                     <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;" id="dailyMaxWeight">0 kg</div>
                                     <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">⬆️ Poids Max</div>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- NOUVEAU: Listes des poids hors limites -->
+                        <div id="outOfRangeLists" style="display: none;" class="out-of-range-list">
+                            <div id="overLimitList" style="display: none; margin-bottom: 20px;">
+                                <h3 style="color: #dc2626; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    ⚠️ Poids SUPÉRIEURS à <span id="displayMaxLimit">0</span> kg
+                                </h3>
+                                <div id="overLimitItems"></div>
+                            </div>
+                            
+                            <div id="underLimitList" style="display: none;">
+                                <h3 style="color: #16a34a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    ℹ️ Poids INFÉRIEURS à <span id="displayMinLimit">0</span> kg
+                                </h3>
+                                <div id="underLimitItems"></div>
                             </div>
                         </div>
                         
@@ -1637,12 +1935,26 @@
         </div>
     </div>
 
-    <!-- Dans header -->
-    <div style="position: absolute; top: 20px; right: 20px;">
-        <button onclick="toggleDarkMode()" style="background: rgba(255,255,255,0.2); border: none; padding: 10px 20px; border-radius: 12px; color: white; cursor: pointer; font-weight: 600;">
-            🌙 Mode Sombre
-        </button>
+    <!-- ⭐ MODAL ALERTE EMPLOYÉ -->
+    <div id="employeeAlertOverlay" class="alert-overlay" style="display: none;" onclick="closeEmployeeAlert()"></div>
+    <div id="employeeAlertModal" class="employee-alert-modal" style="display: none;">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-title">ATTENTION!</div>
+        <div class="alert-message" id="alertMessageContent"></div>
+        <div style="text-align: center; margin-bottom: 16px; font-size: 0.9rem; color: #64748b;">
+            Employé: <strong id="alertEmployeeName" style="color: #1e293b; font-size: 1.1rem;"></strong>
+        </div>
+        <div class="alert-actions">
+            <button class="alert-btn-ok" onclick="closeEmployeeAlert()">
+                ✓ J'ai compris
+            </button>
+        </div>
     </div>
+
+    <!-- Theme Toggle Button -->
+    <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleDarkMode()">
+        🌙 Dark Mode
+    </button>
 
     <script>
         // Configuration IndexedDB
@@ -1837,12 +2149,10 @@
 
         // Ajouter un nouvel employé
         const addEmployee = () => {
-            // ⬇️⬇️⬇️ AMPIANA ITY VERIFICATION ⬇️⬇️⬇️
             if (!db) {
                 showMessage('employeeErrorMsg', 'La base de données n\'est pas encore prête. Veuillez patienter...');
                 return;
             }
-            // ⬆️⬆️⬆️ AMPIANA ITY VERIFICATION ⬆️⬆️⬆️
 
             const name = document.getElementById('employeeName').value.trim();
             if (!name) {
@@ -1852,7 +2162,11 @@
 
             const transaction = db.transaction(['employees'], 'readwrite');
             const store = transaction.objectStore('employees');
-            const employee = { name: name, createdAt: new Date().toISOString() };
+            const employee = { 
+                name: name, 
+                createdAt: new Date().toISOString(),
+                alertNote: '' // ⭐ NOUVEAU
+            };
             
             const request = store.add(employee);
             
@@ -2021,11 +2335,22 @@
                 employees.forEach(employee => {
                     const employeeWeights = weights.filter(w => w.employeeId === employee.id);
                     const row = document.createElement('tr');
+                    
+                    // Badge alerte si note existe
+                    const alertBadge = employee.alertNote ? 
+                        `<span class="employee-alert-badge" title="${employee.alertNote}">⚠️ Alerte</span>` : '';
+                    
                     row.innerHTML = `
-                        <td>${employee.name}</td>
+                        <td>
+                            ${employee.name}
+                            ${alertBadge}
+                        </td>
                         <td>${new Date(employee.createdAt).toLocaleDateString('fr-FR')}</td>
                         <td>${employeeWeights.length}</td>
                         <td>
+                            <button class="edit-btn" onclick="editEmployeeNote(${employee.id}, '${employee.name}', \`${employee.alertNote || ''}\`)">
+                                📝 Note
+                            </button>
                             <button class="edit-btn" onclick="editEmployee(${employee.id}, '${employee.name}')">✏️ Modifier</button>
                             <button class="delete-btn" onclick="deleteEmployee(${employee.id}, '${employee.name}')">🗑️ Supprimer</button>
                         </td>
@@ -2034,6 +2359,39 @@
                 });
             });
         };
+
+        function filterManageEmployees() {
+            const term = document.getElementById('employeeManageSearch').value
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+
+            const rows = document.querySelectorAll('#employeesTableBody tr');
+
+            rows.forEach(row => {
+                const cell = row.querySelector('td:first-child');
+                const name = cell.textContent.toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+                if (name.includes(term)) {
+                    row.style.display = '';
+                    // Highlight
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    cell.innerHTML = cell.textContent.replace(regex, '<span style="background:yellow; font-weight:bold;">$1</span>');
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+
+        function clearEmployeeManageSearch() {
+            document.getElementById('employeeManageSearch').value = '';
+            loadEmployeeManagement();
+        }
+
+
 
         // Modifier un employé
         const editEmployee = (id, name) => {
@@ -2122,7 +2480,7 @@
         };
 
         // Ajouter un poids
-        const addWeight = () => {
+        const addWeight = async () => { // ⭐ async
             if (!db) {
                 showMessage('weightErrorMsg', 'La base de données n\'est pas encore prête. Veuillez patienter...');
                 return;
@@ -2143,6 +2501,10 @@
                 showMessage('weightErrorMsg', 'Prix invalide!');
                 return;
             }
+
+            // ⭐ VÉRIFIER ALERTE
+            const employeeName = document.getElementById('employeeSearchInput').value;
+            await checkEmployeeAlert(parseInt(employeeId), employeeName);
 
             const transaction = db.transaction(['weights'], 'readwrite');
             const store = transaction.objectStore('weights');
@@ -2174,8 +2536,7 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
-                updateQualityStats();
-
+                updateDailyQualityStats();
             };
             
             request.onerror = () => {
@@ -2385,7 +2746,7 @@
                         updateSalaryStats();
                         updateEmployeeStats();
                         updateDailySummary();
-                        updateQualityStats();
+                        updateDailyQualityStats();
 
                     };
                 };
@@ -2407,7 +2768,7 @@
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
-                updateQualityStats();
+                updateDailyQualityStats();
 
             };
         };
@@ -2774,15 +3135,15 @@
 
                         <div class="salary-summary">
                             <div class="salary-row">
-                                <span>💰 Salaire Total</span>
+                                <span style="color: var(--text-primary);">💰 Salaire Total</span>
                                 <span class="salary-total">${salary.toLocaleString('fr-FR')} Ar</span>
                             </div>
                             <div class="salary-row">
-                                <span>✅ Déjà Payé</span>
+                                <span style="color: var(--text-primary);">✅ Déjà Payé</span>
                                 <span class="salary-paid">${totalPaid.toLocaleString('fr-FR')} Ar</span>
                             </div>
                             <div class="salary-row" style="border-top: 2px solid rgba(220, 38, 38, 0.2); padding-top: 8px; margin-top: 8px;">
-                                <span>⚠️ Reste à Payer</span>
+                                <span style="color: var(--text-primary);">⚠️ Reste à Payer</span>
                                 <span class="salary-remaining">${reste.toLocaleString('fr-FR')} Ar</span>
                             </div>
                         </div>
@@ -3752,7 +4113,10 @@
             document.body.removeChild(link);
         };
 
-        const openPaymentModal = (id, name, reste, totalSalary, alreadyPaid) => {
+        const openPaymentModal = async (id, name, reste, totalSalary, alreadyPaid) => { // ⭐ async
+            // ⭐ VÉRIFIER ALERTE
+            await checkEmployeeAlert(id, name);
+            
             currentPaymentEmployee = id;
             currentPaymentReste = reste;
 
@@ -4124,7 +4488,13 @@
                 new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
                 new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); })
             ]).then(([weights, employees]) => {
-                const dailyWeights = weights.filter(w => w.date === selectedDate);
+                // Filtrer par date
+                let dailyWeights = weights.filter(w => w.date === selectedDate);
+
+                // ⭐ FILTRER PAR EMPLOYÉ si sélectionné
+                if (dailyStatsSelectedEmployee) {
+                    dailyWeights = dailyWeights.filter(w => w.employeeId === dailyStatsSelectedEmployee.id);
+                }
 
                 if (dailyWeights.length === 0) {
                     document.getElementById('dailyQualityStatsContainer').style.display = 'none';
@@ -4136,11 +4506,75 @@
                 document.getElementById('noDailyData').style.display = 'none';
 
                 // Afficher la date sélectionnée
-                document.getElementById('selectedDateDisplay').textContent = new Date(selectedDate).toLocaleDateString('fr-FR', {
+                // Afficher date + employé si filtré
+                let dateDisplay = new Date(selectedDate).toLocaleDateString('fr-FR', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
+                });
+
+                if (dailyStatsSelectedEmployee) {
+                    dateDisplay += ` - <strong style="color: #1e40af;">👤 ${dailyStatsSelectedEmployee.name}</strong>`;
+                }
+
+                document.getElementById('selectedDateDisplay').innerHTML = dateDisplay;
+
+                // ⭐ NOUVEAU: Récupérer limites personnalisées
+                const minLimit = parseFloat(document.getElementById('minWeightFilter').value) || 0;
+                const maxLimit = parseFloat(document.getElementById('maxWeightFilter').value) || Infinity;
+
+                // ⭐ NOUVEAU: Grouper par employé ET par qualité pour total
+                const employeeQualityTotals = {}; // { employeeId: { qualityName: totalWeight } }
+
+                dailyWeights.forEach(w => {
+                    if (!employeeQualityTotals[w.employeeId]) {
+                        employeeQualityTotals[w.employeeId] = {
+                            name: employees.find(e => e.id === w.employeeId)?.name || 'Inconnu',
+                            qualities: {}
+                        };
+                    }
+                    
+                    const qualityName = getQualityName(w);
+                    if (!employeeQualityTotals[w.employeeId].qualities[qualityName]) {
+                        employeeQualityTotals[w.employeeId].qualities[qualityName] = {
+                            totalWeight: 0,
+                            count: 0
+                        };
+                    }
+                    
+                    employeeQualityTotals[w.employeeId].qualities[qualityName].totalWeight += w.weight;
+                    employeeQualityTotals[w.employeeId].qualities[qualityName].count += 1;
+                });
+
+                // ⭐ NOUVEAU: Organiser par qualité
+                const qualityEmployeeLists = {}; // { qualityName: { over: [], under: [], inRange: [] } }
+
+                Object.entries(employeeQualityTotals).forEach(([empId, empData]) => {
+                    Object.entries(empData.qualities).forEach(([qualityName, qualityData]) => {
+                        if (!qualityEmployeeLists[qualityName]) {
+                            qualityEmployeeLists[qualityName] = {
+                                over: [],
+                                under: [],
+                                inRange: []
+                            };
+                        }
+
+                        const employeeInfo = {
+                            id: empId,
+                            name: empData.name,
+                            totalWeight: qualityData.totalWeight,
+                            count: qualityData.count
+                        };
+
+                        if (maxLimit < Infinity && qualityData.totalWeight > maxLimit) {
+                            qualityEmployeeLists[qualityName].over.push(employeeInfo);
+                        } else if (minLimit > 0 && qualityData.totalWeight < minLimit) {
+                            qualityEmployeeLists[qualityName].under.push(employeeInfo);
+                        } else {
+                            qualityEmployeeLists[qualityName].inRange.push(employeeInfo);
+                        }
+                    });
                 });
 
                 // Calculer les totaux globaux et construire la map par qualité
@@ -4162,7 +4596,7 @@
                             count: 0,
                             totalSalary: 0,
                             price: price,
-                            perEmployee: {}, // { employeeId: totalWeightForThatEmployee }
+                            perEmployee: {},
                             details: []
                         };
                     }
@@ -4177,7 +4611,6 @@
                         salary: salary
                     });
 
-                    // Cumuler poids isaky ny employé ho an'ity qualité ity
                     if (!qualityMap[qualityName].perEmployee[w.employeeId]) {
                         qualityMap[qualityName].perEmployee[w.employeeId] = 0;
                     }
@@ -4196,6 +4629,109 @@
                 document.getElementById('dailyMinWeight').textContent = globalMin.toFixed(1) + ' kg';
                 document.getElementById('dailyMaxWeight').textContent = globalMax.toFixed(1) + ' kg';
 
+                // ⭐ NOUVEAU: Afficher les listes PAR QUALITÉ
+                const outOfRangeLists = document.getElementById('outOfRangeLists');
+                const hasFilters = minLimit > 0 || maxLimit < Infinity;
+                
+                if (hasFilters) {
+                    outOfRangeLists.style.display = 'block';
+                    outOfRangeLists.innerHTML = ''; // Vider
+
+                    Object.keys(qualityEmployeeLists).sort().forEach(qualityName => {
+                        const lists = qualityEmployeeLists[qualityName];
+                        const hasData = lists.over.length > 0 || lists.under.length > 0 || lists.inRange.length > 0;
+                        
+                        if (!hasData) return;
+
+                        // Container pour cette qualité
+                        const qualitySection = document.createElement('div');
+                        qualitySection.style.cssText = 'margin-bottom: 30px; padding: 20px; background: rgba(255,255,255,0.95); border-radius: 16px; border: 2px solid rgba(100,116,139,0.2);';
+
+                        let qualityHTML = `
+                            <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                                💎 ${qualityName}
+                            </h3>
+                        `;
+
+                        // Liste SUPÉRIEURS (Rouge)
+                        if (lists.over.length > 0) {
+                            qualityHTML += `
+                                <div style="margin-bottom: 16px;">
+                                    <h4 style="color: #dc2626; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                                        ⚠️ Poids SUPÉRIEURS à ${maxLimit.toFixed(1)} kg (${lists.over.length})
+                                    </h4>
+                                    ${lists.over.sort((a, b) => b.totalWeight - a.totalWeight).map(emp => `
+                                        <div class="out-of-range-item over-item" style="margin-bottom: 8px;">
+                                            <div>
+                                                <strong style="font-size: 1.05rem;">${emp.name}</strong>
+                                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 2px;">
+                                                    ${emp.count} pesage(s)
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">
+                                                ${emp.totalWeight.toFixed(1)} kg
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+
+                        // Liste INFÉRIEURS (Rouge aussi maintenant)
+                        if (lists.under.length > 0) {
+                            qualityHTML += `
+                                <div style="margin-bottom: 16px;">
+                                    <h4 style="color: #dc2626; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                                        ⚠️ Poids INFÉRIEURS à ${minLimit.toFixed(1)} kg (${lists.under.length})
+                                    </h4>
+                                    ${lists.under.sort((a, b) => a.totalWeight - b.totalWeight).map(emp => `
+                                        <div class="out-of-range-item" style="margin-bottom: 8px; background: rgba(220, 38, 38, 0.08); border: 2px solid rgba(220, 38, 38, 0.2);">
+                                            <div>
+                                                <strong style="font-size: 1.05rem;">${emp.name}</strong>
+                                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 2px;">
+                                                    ${emp.count} pesage(s)
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">
+                                                ${emp.totalWeight.toFixed(1)} kg
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+
+                        // Liste VALIDES (Vert)
+                        if (lists.inRange.length > 0) {
+                            qualityHTML += `
+                                <div>
+                                    <h4 style="color: #16a34a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 1rem;">
+                                        ✅ Dans les limites (${lists.inRange.length})
+                                    </h4>
+                                    ${lists.inRange.sort((a, b) => b.totalWeight - a.totalWeight).map(emp => `
+                                        <div class="out-of-range-item" style="margin-bottom: 8px; background: rgba(22, 163, 74, 0.08); border: 2px solid rgba(22, 163, 74, 0.2);">
+                                            <div>
+                                                <strong style="font-size: 1.05rem;">${emp.name}</strong>
+                                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 2px;">
+                                                    ${emp.count} pesage(s)
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 1.3rem; font-weight: 800; color: #16a34a;">
+                                                ${emp.totalWeight.toFixed(1)} kg
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+
+                        qualitySection.innerHTML = qualityHTML;
+                        outOfRangeLists.appendChild(qualitySection);
+                    });
+                } else {
+                    outOfRangeLists.style.display = 'none';
+                }
+
                 // Construire les cartes par qualité
                 const container = document.getElementById('dailyQualityBreakdown');
                 container.innerHTML = '';
@@ -4204,7 +4740,6 @@
                     const data = qualityMap[qualityName];
                     const avgWeight = data.totalWeight / data.count;
 
-                    // Trier les employés par total poids pour cette qualité
                     const sortedEmployees = Object.entries(data.perEmployee)
                         .map(([empId, totalW]) => ({
                             id: parseInt(empId),
@@ -4213,13 +4748,11 @@
                         }))
                         .sort((a, b) => a.weight - b.weight);
 
-                    // Si aucune donnée employé, on saute cette qualité
                     if (sortedEmployees.length === 0) return;
 
                     const top5Min = sortedEmployees.slice(0, 5);
                     const top5Max = sortedEmployees.slice(-5).reverse();
 
-                    // Choix d'icône et style selon le prix
                     let icon = '💎';
                     let colorGradient = 'linear-gradient(90deg, #059669, #047857)';
                     let bgColor = 'rgba(5, 150, 105, 0.1)';
@@ -4280,7 +4813,7 @@
                     container.appendChild(card);
                 });
 
-                // Remplir le tableau détaillé
+                // Remplir tableau détaillé
                 const tbody = document.getElementById('dailyQualityTableBody');
                 tbody.innerHTML = '';
                 dailyWeights.forEach(w => {
@@ -4293,9 +4826,9 @@
                     row.innerHTML = `
                         <td style="font-weight:600">${empName}</td>
                         <td>${quality}</td>
-                        <td>${w.weight.toFixed(1)} kg</td>
+                        <td style="font-size: 1.1rem; font-weight: 700;">${w.weight.toFixed(1)} kg</td>
                         <td>${price.toLocaleString('fr-FR')} Ar</td>
-                        <td>${salary.toLocaleString('fr-FR')} Ar</td>
+                        <td style="font-weight: 700; color: #059669;">${salary.toLocaleString('fr-FR')} Ar</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -4307,7 +4840,162 @@
             });
         };
 
+        // ⭐ RECHERCHE INTELLIGENTE POUR STATS QUOTIDIENNES
+        let dailyStatsSelectedEmployee = null;
 
+        const showDailyStatsEmployeeDropdown = () => {
+            if (allEmployees.length === 0) {
+                document.getElementById('dailyStatsEmployeeDropdown').innerHTML = 
+                    '<div class="employee-option no-results">Aucun employé trouvé</div>';
+            } else {
+                displayDailyStatsEmployeeOptions(allEmployees);
+            }
+            document.getElementById('dailyStatsEmployeeDropdown').style.display = 'block';
+        };
+
+        const filterDailyStatsByEmployee = () => {
+            const searchTerm = document.getElementById('dailyStatsEmployeeSearch').value.toLowerCase();
+            const dropdown = document.getElementById('dailyStatsEmployeeDropdown');
+            
+            if (searchTerm === '') {
+                showDailyStatsEmployeeDropdown();
+                return;
+            }
+            
+            const filteredEmployees = allEmployees.filter(employee => 
+                employee.name.toLowerCase().includes(searchTerm)
+            );
+            
+            displayDailyStatsEmployeeOptions(filteredEmployees);
+            dropdown.style.display = 'block';
+        };
+
+        const displayDailyStatsEmployeeOptions = (employees) => {
+            const dropdown = document.getElementById('dailyStatsEmployeeDropdown');
+            
+            if (employees.length === 0) {
+                dropdown.innerHTML = '<div class="employee-option no-results">Aucun employé trouvé</div>';
+            } else {
+                dropdown.innerHTML = employees.map((employee) => 
+                    `<div class="employee-option" onclick="selectDailyStatsEmployee(${employee.id}, '${employee.name}')">
+                        ${employee.name}
+                    </div>`
+                ).join('');
+            }
+        };
+
+        const selectDailyStatsEmployee = (id, name) => {
+            dailyStatsSelectedEmployee = { id, name };
+            document.getElementById('dailyStatsEmployeeSearch').value = name;
+            document.getElementById('selectedDailyStatsEmployeeId').value = id;
+            document.getElementById('dailyStatsEmployeeDropdown').style.display = 'none';
+            
+            // Afficher badge
+            document.getElementById('selectedEmployeeInfo').style.display = 'block';
+            document.getElementById('selectedEmployeeNameDisplay').textContent = name;
+            
+            // Relancer stats
+            updateDailyQualityStats();
+        };
+
+        const clearDailyStatsEmployeeFilter = () => {
+            dailyStatsSelectedEmployee = null;
+            document.getElementById('dailyStatsEmployeeSearch').value = '';
+            document.getElementById('selectedDailyStatsEmployeeId').value = '';
+            document.getElementById('selectedEmployeeInfo').style.display = 'none';
+            document.getElementById('dailyStatsEmployeeDropdown').style.display = 'none';
+            
+            // Relancer sans filtre
+            updateDailyQualityStats();
+        };
+
+        // Fermer dropdown si clic dehors
+        document.addEventListener('click', (e) => {
+            const searchContainer = document.getElementById('dailyStatsEmployeeSearch')?.parentElement;
+            const dropdown = document.getElementById('dailyStatsEmployeeDropdown');
+            
+            if (searchContainer && !searchContainer.contains(e.target)) {
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        });
+
+        // ⭐ SYSTÈME D'ALERTE EMPLOYÉ
+
+        // Ouvrir modal édition note
+        const editEmployeeNote = (id, name, currentNote) => {
+            const newNote = prompt(
+                `📝 Note d'alerte pour "${name}"\n\n` +
+                `Cette note apparaîtra automatiquement lors:\n` +
+                `• Enregistrement de pesage\n` +
+                `• Enregistrement de paiement\n\n` +
+                `Note actuelle: ${currentNote || '(aucune)'}\n\n` +
+                `Nouvelle note (laisser vide pour supprimer):`,
+                currentNote || ''
+            );
+            
+            if (newNote === null) return; // Annulé
+            
+            const transaction = db.transaction(['employees'], 'readwrite');
+            const store = transaction.objectStore('employees');
+            
+            const request = store.get(id);
+            request.onsuccess = () => {
+                const employee = request.result;
+                if (employee) {
+                    employee.alertNote = newNote.trim();
+                    employee.updatedAt = new Date().toISOString();
+                    
+                    const updateRequest = store.put(employee);
+                    updateRequest.onsuccess = () => {
+                        loadAllEmployees();
+                        loadEmployeeManagement();
+                        alert(newNote.trim() ? '✅ Note enregistrée!' : '✅ Note supprimée!');
+                    };
+                }
+            };
+        };
+
+        // Afficher alerte si employé a une note
+        const checkEmployeeAlert = (employeeId, employeeName) => {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['employees'], 'readonly');
+                const store = transaction.objectStore('employees');
+                const request = store.get(employeeId);
+                
+                request.onsuccess = () => {
+                    const employee = request.result;
+                    if (employee && employee.alertNote && employee.alertNote.trim() !== '') {
+                        showEmployeeAlert(employeeName, employee.alertNote);
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                };
+                
+                request.onerror = () => resolve(false);
+            });
+        };
+
+        // Afficher modal alerte
+        const showEmployeeAlert = (employeeName, alertNote) => {
+            document.getElementById('alertEmployeeName').textContent = employeeName;
+            document.getElementById('alertMessageContent').textContent = alertNote;
+            document.getElementById('employeeAlertOverlay').style.display = 'block';
+            document.getElementById('employeeAlertModal').style.display = 'block';
+            
+            // Son d'alerte (optionnel)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzWO1fPTgjMGHm7A7+OZSA0PVq3o7IhLCxNPn9/xvmwhBzWO1fPTgjMGHm7A7+OaRw0QVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw0PVKzn7I1ODAtNnt/wvmwhBzWO1fPTgjMGHm7A7+OaRw==');
+                audio.volume = 0.3;
+                audio.play().catch(() => {}); // Ignore si pas autorisé
+            } catch(e) {}
+        };
+
+        // Fermer modal
+        const closeEmployeeAlert = () => {
+            document.getElementById('employeeAlertOverlay').style.display = 'none';
+            document.getElementById('employeeAlertModal').style.display = 'none';
+        };
 
         // ⭐ NOUVEAU: Afficher les stats d'aujourd'hui
         const showTodayStats = () => {
@@ -4331,5 +5019,6 @@
         }
 
     </script>
+    <script src="theme.js"></script>
 </body>
 </html>
