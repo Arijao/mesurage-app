@@ -3521,20 +3521,17 @@
                         return;
                     }
                     
-                    // Dans importJSON() reader.onload ...
-                    // ... après avoir vérifié importData.employees et importData.weights
-
                     const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readwrite');
                     const weightStore = transaction.objectStore('weights');
                     const employeeStore = transaction.objectStore('employees');
                     const priceStore = transaction.objectStore('prices');
-                    const paymentStore = transaction.objectStore('payments'); // <-- nouvel ajout
+                    const paymentStore = transaction.objectStore('payments');
 
                     // Vider les tables existantes
                     weightStore.clear();
                     employeeStore.clear();
                     priceStore.clear();
-                    paymentStore.clear(); // <-- vider les paiements aussi
+                    paymentStore.clear();
 
                     // Importer les employés
                     importData.employees.forEach(employee => {
@@ -3562,14 +3559,9 @@
 
                     
                     transaction.oncomplete = () => {
-                        loadCurrentPrice(); // ⬅️ VAOVAO: Mamerina mamaky ny prix
-                        loadAllEmployees();
-                        loadWeights();
-                        updateStats();
-                        updateSalaryStats(); // ⬅️ VAOVAO: Manavao ny statistiques des salaires
-                        updateEmployeeStats();
-                        loadEmployeeManagement();
-                        showMessage('importSuccessMsg', 'Données importées avec succès!');
+                        // â­ Utiliser la fonction de rafraichissement complète
+                        refreshAllViews();
+                        showMessage('importSuccessMsg', 'Données importées avec succé¨s!');
                         fileInput.value = '';
                     };
                     
@@ -3604,31 +3596,60 @@
 
             
             transaction.oncomplete = () => {
-                // ⬇️⬇️⬇️ FANOVANA 2: Mamerina ny prix ho 0 ⬇️⬇️⬇️
-                currentPricePerKg = 0; // ⬅️ VAOVAO
-                document.getElementById('currentPrice').textContent = '0 Ar'; // ⬅️ VAOVAO
-                document.getElementById('pricePerKg').value = ''; // ⬅️ VAOVAO
-                // ⬆️⬆️⬆️ FARANY FANOVANA 2 ⬆️⬆️⬆️
-                
-                loadAllEmployees();
-                loadWeights();
-                updateStats();
-                updateSalaryStats(); // ⬅️ VAOVAO: Manavao ny statistiques des salaires
-                updateEmployeeStats();
-                loadEmployeeManagement();
-                
-                // Réinitialiser les filtres
-                document.getElementById('nameFilter').value = '';
-                document.getElementById('monthFilter').value = '';
-                document.getElementById('dateFilter').value = '';
-                document.getElementById('dailySummary').style.display = 'none';
-                
-                // Réinitialiser la recherche d'employé
-                document.getElementById('employeeSearchInput').value = '';
-                document.getElementById('selectedEmployeeId').value = '';
-                document.getElementById('employeeDropdown').style.display = 'none';
-                
-                alert('Remise à zéro effectuée avec succès!');
+                // ⭐ OBLIGATOIRE: Miandry kely alohan'ny refresh
+                setTimeout(() => {
+                    // Réinitialiser prix par défaut
+                    currentPricePerKg = 0;
+                    document.getElementById('currentDefaultPrice').textContent = '0 Ar';
+                    document.getElementById('defaultPricePerKg').value = '';
+                    
+                    // Réinitialiser formulaire pesage
+                    document.getElementById('weight').value = '';
+                    document.getElementById('weighingDate').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('qualityName').value = '';
+                    document.getElementById('qualityPrice').value = '';
+                    document.getElementById('employeeSearchInput').value = '';
+                    document.getElementById('selectedEmployeeId').value = '';
+                    
+                    // Réinitialiser stats quotidiennes
+                    document.getElementById('dailyStatsDate').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('dailyQualityStatsContainer').style.display = 'none';
+                    document.getElementById('noDailyData').style.display = 'none';
+                    
+                    // Effacer filtre employé stats quotidiennes
+                    dailyStatsSelectedEmployee = null;
+                    document.getElementById('dailyStatsEmployeeSearch').value = '';
+                    document.getElementById('selectedEmployeeInfo').style.display = 'none';
+                    
+                    // Réinitialiser recherche employé
+                    document.getElementById('employeeSearchInput').value = '';
+                    document.getElementById('selectedEmployeeId').value = '';
+                    document.getElementById('employeeDropdown').style.display = 'none';
+                    
+                    // Réinitialiser filtres recherche
+                    document.getElementById('nameFilter').value = '';
+                    document.getElementById('selectedFilterEmployeeId').value = '';
+                    document.getElementById('monthFilter').value = '';
+                    document.getElementById('dateFilter').value = '';
+                    document.getElementById('dailySummary').style.display = 'none';
+                    document.getElementById('searchStats').style.display = 'none';
+                    document.getElementById('filterEmployeeDropdown').style.display = 'none';
+                    
+                    // ⭐ RELOAD TOUS LES DONNÉES
+                    loadAllEmployees();
+                    loadWeights();
+                    updateStats();
+                    updateSalaryStats();
+                    updateEmployeeStats();
+                    loadEmployeeManagement();
+                    
+                    alert('✅ Remise à zéro effectuée avec succès!\n\nToutes les données ont été supprimées.');
+                    console.log('✅ Reset terminé et interface mise à jour');
+                }, 100);
+            };
+            
+            transaction.onerror = () => {
+                alert('❌ Erreur lors de la remise à zéro!');
             };
         };
 
