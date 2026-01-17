@@ -1455,7 +1455,7 @@
         }
 
         /* ========================================
-        🎯 SIDEBAR GLASSMORPHISM
+        🎯 SIDEBAR GLASSMORPHISM avec GROUPES
         ======================================== */
 
         .sidebar {
@@ -1473,10 +1473,30 @@
             z-index: 10000;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar.active {
             left: 0;
+        }
+
+        /* Scrollbar personnalisée pour sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.6);
         }
 
         /* Header */
@@ -1550,6 +1570,67 @@
             border-radius: 3px;
         }
 
+        /* ========================================
+        🎯 GROUPES NAVIGATION
+        ======================================== */
+
+        .nav-group {
+            margin-bottom: 8px;
+        }
+
+        .nav-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: rgba(100, 116, 139, 0.05);
+            margin-bottom: 4px;
+        }
+
+        .nav-group-header:hover {
+            background: rgba(100, 116, 139, 0.12);
+            transform: translateX(2px);
+        }
+
+        .nav-group-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+
+        .nav-arrow {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #64748b;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-group-header.active .nav-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Items du groupe */
+        .nav-group-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-left: 12px;
+        }
+
+        .nav-group-items.active {
+            max-height: 500px;
+        }
+
+        /* ========================================
+        🎯 ITEMS NAVIGATION
+        ======================================== */
+
         .nav-item {
             display: flex;
             align-items: center;
@@ -1599,6 +1680,26 @@
             transform: translateX(0);
         }
 
+        /* Items dans groupes */
+        .nav-group-items .nav-item {
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            border-left: 2px solid transparent;
+            margin-left: 8px;
+        }
+
+        .nav-group-items .nav-item:hover {
+            border-left-color: #64748b;
+            background: rgba(100, 116, 139, 0.06);
+        }
+
+        .nav-group-items .nav-item.active {
+            border-left-color: #0f172a;
+            background: rgba(100, 116, 139, 0.1);
+        }
+
+        /* Icônes */
         .nav-icon {
             font-size: 1.3rem;
             transition: transform 0.3s ease;
@@ -1611,6 +1712,37 @@
         .nav-item.active .nav-icon {
             transform: scale(1.15);
         }
+
+        .nav-icon-sub {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .nav-group-items .nav-item:hover .nav-icon-sub {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* Animation ouverture groupe */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-group-items.active .nav-item {
+            animation: slideDown 0.3s ease-out forwards;
+        }
+
+        .nav-group-items.active .nav-item:nth-child(1) { animation-delay: 0.05s; }
+        .nav-group-items.active .nav-item:nth-child(2) { animation-delay: 0.1s; }
+        .nav-group-items.active .nav-item:nth-child(3) { animation-delay: 0.15s; }
+        .nav-group-items.active .nav-item:nth-child(4) { animation-delay: 0.2s; }
 
         /* Footer */
         .sidebar-footer {
@@ -1639,7 +1771,10 @@
             transform: translateY(-2px);
         }
 
-        /* Burger Menu Button */
+        /* ========================================
+        🎯 BURGER MENU
+        ======================================== */
+
         .menu-toggle {
             position: fixed;
             top: 20px;
@@ -1678,73 +1813,41 @@
             background: #0f172a;
         }
 
-        /* Overlay */
+        /* Animation burger en X */
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translateY(10px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translateY(-10px);
+        }
+
+        /* ========================================
+        🎯 OVERLAY
+        ======================================== */
+
         .sidebar-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
             z-index: 9998;
+            cursor: pointer;
         }
 
         .sidebar-overlay.active {
             opacity: 1;
             visibility: visible;
-        }
-
-        /* Dark Mode */
-        [data-theme="dark"] .sidebar {
-            background: rgba(15, 23, 42, 0.9);
-            border-right-color: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="dark"] .sidebar-header,
-        [data-theme="dark"] .sidebar-footer {
-            background: rgba(30, 41, 59, 0.5);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="dark"] .nav-item {
-            color: #cbd5e1;
-        }
-
-        [data-theme="dark"] .nav-item:hover {
-            background: rgba(148, 163, 184, 0.1);
-            color: #f8fafc;
-        }
-
-        [data-theme="dark"] .nav-item.active {
-            background: rgba(100, 116, 139, 0.2);
-            color: #f8fafc;
-        }
-
-        [data-theme="dark"] .menu-toggle {
-            background: rgba(30, 41, 59, 0.9);
-        }
-
-        [data-theme="dark"] .menu-toggle span {
-            background: #cbd5e1;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 280px;
-                left: -280px;
-            }
-            
-            .menu-toggle {
-                top: 15px;
-                left: 15px;
-                width: 45px;
-                height: 45px;
-            }
         }
 
         /* ========================================
@@ -1797,7 +1900,107 @@
             visibility: visible;
         }
 
-        /* Dark mode tooltips */
+        /* Animation tooltip */
+        @keyframes tooltipSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(10px);
+            }
+        }
+
+        [data-tooltip]:hover::after {
+            animation: tooltipSlide 0.3s ease;
+        }
+
+        /* ========================================
+        🎯 SCROLL LOCK
+        ======================================== */
+
+        body.sidebar-open {
+            overflow: hidden !important;
+        }
+
+        /* Empêcher scroll du contenu principal */
+        .main-content {
+            transition: filter 0.3s ease;
+        }
+
+        body.sidebar-open .main-content {
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        /* ========================================
+        🎯 DARK MODE
+        ======================================== */
+
+        [data-theme="dark"] .sidebar {
+            background: rgba(15, 23, 42, 0.9);
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .sidebar-header,
+        [data-theme="dark"] .sidebar-footer {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .nav-group-header {
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        [data-theme="dark"] .nav-group-header:hover {
+            background: rgba(148, 163, 184, 0.15);
+        }
+
+        [data-theme="dark"] .nav-group-title {
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .nav-arrow {
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .nav-item {
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .nav-item:hover {
+            background: rgba(148, 163, 184, 0.1);
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .nav-item.active {
+            background: rgba(100, 116, 139, 0.2);
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .nav-group-items .nav-item {
+            border-left-color: transparent;
+        }
+
+        [data-theme="dark"] .nav-group-items .nav-item:hover {
+            border-left-color: #cbd5e1;
+            background: rgba(148, 163, 184, 0.1);
+        }
+
+        [data-theme="dark"] .nav-group-items .nav-item.active {
+            border-left-color: #f8fafc;
+            background: rgba(148, 163, 184, 0.15);
+        }
+
+        [data-theme="dark"] .menu-toggle {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        [data-theme="dark"] .menu-toggle span {
+            background: #cbd5e1;
+        }
+
         [data-theme="dark"] [data-tooltip]::after {
             background: rgba(248, 250, 252, 0.95);
             color: #0f172a;
@@ -1809,118 +2012,27 @@
         }
 
         /* ========================================
-        🎯 SCROLL LOCK quand sidebar ouvert
+        🎯 RESPONSIVE
         ======================================== */
 
-        body.sidebar-open {
-            overflow: hidden !important;
-            padding-right: 15px; /* Compenser scrollbar disparue */
-        }
-
-        /* Fixer le burger menu quand scroll locked */
-        body.sidebar-open .menu-toggle {
-            right: 15px; /* Compenser scrollbar */
-        }
-
-        /* ========================================
-        🎯 SIDEBAR - Click uniquement dans sidebar
-        ======================================== */
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 320px;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
-            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto; /* ⬅️ Scroll uniquement dans sidebar */
-            overflow-x: hidden;
-        }
-
-        .sidebar.active {
-            left: 0;
-        }
-
-        /* Scrollbar personnalisée pour sidebar */
-        .sidebar::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(241, 245, 249, 0.5);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(100, 116, 139, 0.4);
-            border-radius: 4px;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(100, 116, 139, 0.6);
-        }
-
-        /* Empêcher scroll du contenu principal */
-        .main-content {
-            transition: filter 0.3s ease;
-        }
-
-        body.sidebar-open .main-content {
-            filter: blur(2px); /* ⬅️ Effet blur sur contenu */
-            pointer-events: none; /* ⬅️ Désactiver clicks */
-        }
-
-        /* Overlay plus visible */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6); /* ⬅️ Plus sombre */
-            backdrop-filter: blur(4px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 9998;
-            cursor: pointer; /* ⬅️ Indiquer cliquable */
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* ========================================
-        🎯 TOOLTIPS pour items navigation
-        ======================================== */
-
-        /* Version desktop : tooltips à droite */
-        @media (min-width: 769px) {
-            .nav-item[data-tooltip]::after {
-                left: 100%;
-                top: 50%;
-                transform: translateY(-50%) translateX(10px);
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+                left: -280px;
             }
             
-            .nav-item[data-tooltip]::before {
-                left: 100%;
-                top: 50%;
-                transform: translateY(-50%) translateX(4px);
-                border-right-color: rgba(15, 23, 42, 0.95);
-                border-left-color: transparent;
+            .menu-toggle {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
             }
-        }
-
-        /* Version mobile : tooltips en haut */
-        @media (max-width: 768px) {
+            
+            .nav-group-items.active {
+                max-height: 400px;
+            }
+            
+            /* Tooltips en haut sur mobile */
             .nav-item[data-tooltip]::after {
                 left: 50%;
                 top: auto;
@@ -1938,25 +2050,26 @@
             }
         }
 
-        /* Animation tooltip */
-        @keyframes tooltipSlide {
-            from {
-                opacity: 0;
-                transform: translateY(-50%) translateX(5px);
-            }
-            to {
-                opacity: 1;
+        /* Desktop tooltips à droite */
+        @media (min-width: 769px) {
+            .nav-item[data-tooltip]::after {
+                left: 100%;
+                top: 50%;
                 transform: translateY(-50%) translateX(10px);
             }
-        }
-
-        [data-tooltip]:hover::after {
-            animation: tooltipSlide 0.3s ease;
+            
+            .nav-item[data-tooltip]::before {
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%) translateX(4px);
+                border-right-color: rgba(15, 23, 42, 0.95);
+                border-left-color: transparent;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 🎯 SIDEBAR NAVIGATION -->
+    <!-- 🎯 SIDEBAR NAVIGATION GROUPÉE -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
@@ -1969,38 +2082,150 @@
         </div>
         
         <nav class="sidebar-nav">
-            <a href="#dashboard" class="nav-item active" onclick="navigateTo('dashboard')">
-                <span class="nav-icon">📊</span>
-                <span class="nav-text">Tableau de Bord</span>
-            </a>
-            <a href="#employees" class="nav-item" onclick="navigateTo('employees')">
-                <span class="nav-icon">👥</span>
-                <span class="nav-text">Employés</span>
-            </a>
-            <a href="#weighing" class="nav-item" onclick="navigateTo('weighing')">
-                <span class="nav-icon">⚖️</span>
-                <span class="nav-text">Pesage</span>
-            </a>
-            <a href="#quality-stats" class="nav-item" onclick="navigateTo('quality-stats')">
-                <span class="nav-icon">💎</span>
-                <span class="nav-text">Stats par Qualité</span>
-            </a>
-            <a href="#daily-stats" class="nav-item" onclick="navigateTo('daily-stats')">
-                <span class="nav-icon">📅</span>
-                <span class="nav-text">Stats Quotidiennes</span>
-            </a>
-            <a href="#search" class="nav-item" onclick="navigateTo('search')">
-                <span class="nav-icon">🔍</span>
-                <span class="nav-text">Recherche</span>
-            </a>
-            <a href="#salary" class="nav-item" onclick="navigateTo('salary')">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text">Salaires</span>
-            </a>
-            <a href="#settings" class="nav-item" onclick="navigateTo('settings')">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-text">Paramètres</span>
-            </a>
+            <!-- 📊 DASHBOARD -->
+            <div class="nav-group">
+                <div class="nav-group-header" onclick="toggleGroup('dashboard-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="dashboard-group">
+                    <a href="#stats-generales" class="nav-item" onclick="navigateTo('dashboard')" 
+                    data-tooltip="Voir les compteurs généraux">
+                        <span class="nav-icon-sub">📈</span>
+                        <span class="nav-text">Statistiques Générales</span>
+                    </a>
+                    <a href="#repartition-qualite" class="nav-item" onclick="navigateTo('quality-stats')" 
+                    data-tooltip="Répartition par qualité de vanille">
+                        <span class="nav-icon-sub">💎</span>
+                        <span class="nav-text">Répartition par Qualité</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 👥 EMPLOYÉS -->
+            <div class="nav-group">
+                <div class="nav-group-header" onclick="toggleGroup('employees-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">Employés</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="employees-group">
+                    <a href="#add-employee" class="nav-item" onclick="navigateTo('add-employee')" 
+                    data-tooltip="Ajouter un nouvel employé">
+                        <span class="nav-icon-sub">➕</span>
+                        <span class="nav-text">Ajouter Employé</span>
+                    </a>
+                    <a href="#manage-employees" class="nav-item" onclick="navigateTo('manage-employees')" 
+                    data-tooltip="Gérer les employés existants">
+                        <span class="nav-icon-sub">⚙️</span>
+                        <span class="nav-text">Gestion Employés</span>
+                    </a>
+                    <a href="#employee-stats" class="nav-item" onclick="navigateTo('employee-stats')" 
+                    data-tooltip="Statistiques détaillées par employé">
+                        <span class="nav-icon-sub">📊</span>
+                        <span class="nav-text">Stats par Employé</span>
+                    </a>
+                    <a href="#employee-salary" class="nav-item" onclick="navigateTo('salary')" 
+                    data-tooltip="Détail des salaires par employé">
+                        <span class="nav-icon-sub">💵</span>
+                        <span class="nav-text">Salaires Détaillés</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ⚖️ PESAGE -->
+            <div class="nav-group">
+                <div class="nav-group-header" onclick="toggleGroup('weighing-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">⚖️</span>
+                        <span class="nav-text">Pesage</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="weighing-group">
+                    <a href="#record-weighing" class="nav-item" onclick="navigateTo('weighing')" 
+                    data-tooltip="Enregistrer un nouveau pesage">
+                        <span class="nav-icon-sub">📝</span>
+                        <span class="nav-text">Enregistrement Pesage</span>
+                    </a>
+                    <a href="#weighing-list" class="nav-item" onclick="navigateTo('weighing-list')" 
+                    data-tooltip="Voir tous les pesages">
+                        <span class="nav-icon-sub">📋</span>
+                        <span class="nav-text">Liste des Pesages</span>
+                    </a>
+                    <a href="#daily-quality-stats" class="nav-item" onclick="navigateTo('daily-stats')" 
+                    data-tooltip="Stats quotidiennes par qualité">
+                        <span class="nav-icon-sub">📅</span>
+                        <span class="nav-text">Stats Quotidiennes</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 💰 FINANCES -->
+            <div class="nav-group">
+                <div class="nav-group-header" onclick="toggleGroup('finance-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">💰</span>
+                        <span class="nav-text">Finances</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="finance-group">
+                    <a href="#default-price" class="nav-item" onclick="navigateTo('settings')" 
+                    data-tooltip="Définir le prix par défaut">
+                        <span class="nav-icon-sub">💲</span>
+                        <span class="nav-text">Prix par Défaut</span>
+                    </a>
+                    <a href="#salary-calculation" class="nav-item" onclick="navigateTo('salary-calc')" 
+                    data-tooltip="Calculer les salaires">
+                        <span class="nav-icon-sub">🧮</span>
+                        <span class="nav-text">Calcul Salaires</span>
+                    </a>
+                    <a href="#salary-by-quality" class="nav-item" onclick="navigateTo('quality-stats')" 
+                    data-tooltip="Répartition des salaires par qualité">
+                        <span class="nav-icon-sub">💎</span>
+                        <span class="nav-text">Répartition Salaires</span>
+                    </a>
+                    <a href="#salary-details" class="nav-item" onclick="navigateTo('salary')" 
+                    data-tooltip="Détails des salaires">
+                        <span class="nav-icon-sub">📊</span>
+                        <span class="nav-text">Détails Salaires</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ⚙️ OUTILS -->
+            <div class="nav-group">
+                <div class="nav-group-header" onclick="toggleGroup('tools-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-text">Outils</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="tools-group">
+                    <a href="#search" class="nav-item" onclick="navigateTo('search')" 
+                    data-tooltip="Rechercher et filtrer les données">
+                        <span class="nav-icon-sub">🔍</span>
+                        <span class="nav-text">Recherche & Filtrage</span>
+                    </a>
+                    <a href="#import-export" class="nav-item" onclick="navigateTo('import-export')" 
+                    data-tooltip="Importer/Exporter les données">
+                        <span class="nav-icon-sub">💾</span>
+                        <span class="nav-text">Import/Export JSON</span>
+                    </a>
+                    <a href="#database-check" class="nav-item" onclick="navigateTo('database-check')" 
+                    data-tooltip="Vérifier la base de données">
+                        <span class="nav-icon-sub">🔍</span>
+                        <span class="nav-text">Vérification BDD</span>
+                    </a>
+                </div>
+            </div>
         </nav>
         
         <div class="sidebar-footer">
@@ -5821,7 +6046,7 @@
         }
 
         // ========================================
-        // 🎯 SIDEBAR NAVIGATION avec SCROLL LOCK
+        // 🎯 SIDEBAR NAVIGATION avec GROUPES et SCROLL LOCK
         // ========================================
 
         let sidebarOpen = false;
@@ -5830,6 +6055,7 @@
             sidebarOpen = !sidebarOpen;
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            const menuToggle = document.getElementById('menuToggle');
             const body = document.body;
             
             if (sidebarOpen) {
@@ -5837,6 +6063,7 @@
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
                 body.classList.add('sidebar-open');
+                if (menuToggle) menuToggle.classList.add('active');
                 
                 // Sauvegarder position scroll actuelle
                 const scrollY = window.scrollY;
@@ -5849,6 +6076,7 @@
                 sidebar.classList.remove('active');
                 overlay.classList.remove('active');
                 body.classList.remove('sidebar-open');
+                if (menuToggle) menuToggle.classList.remove('active');
                 
                 // Restaurer position scroll
                 const scrollY = body.style.top;
@@ -5859,7 +6087,39 @@
             }
         };
 
-        // Navigation entre sections (ferme sidebar automatiquement)
+        // ========================================
+        // 🎯 GESTION DES GROUPES ACCORDÉON
+        // ========================================
+
+        const toggleGroup = (groupId) => {
+            const group = document.getElementById(groupId);
+            const header = event.target.closest('.nav-group-header');
+            
+            if (!group || !header) return;
+            
+            // Si le groupe est déjà ouvert, le fermer
+            if (group.classList.contains('active')) {
+                group.classList.remove('active');
+                header.classList.remove('active');
+            } else {
+                // Fermer tous les autres groupes (accordéon)
+                document.querySelectorAll('.nav-group-items').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelectorAll('.nav-group-header').forEach(h => {
+                    h.classList.remove('active');
+                });
+                
+                // Ouvrir le groupe cliqué
+                group.classList.add('active');
+                header.classList.add('active');
+            }
+        };
+
+        // ========================================
+        // 🎯 NAVIGATION ENTRE SECTIONS
+        // ========================================
+
         const navigateTo = (section) => {
             // Fermer sidebar d'abord
             if (sidebarOpen) {
@@ -5881,16 +6141,31 @@
                     }
                 }
                 
-                // Mapping des sections vers IDs d'éléments
+                // Mapping COMPLET des sections vers IDs d'éléments
                 const sectionMap = {
+                    // Dashboard
                     'dashboard': 'totalEmployees',
-                    'employees': 'employeesTable',
-                    'weighing': 'employeeSearchInput',
                     'quality-stats': 'salaryByQualityGrid',
-                    'daily-stats': 'dailyStatsDate',
-                    'search': 'nameFilter',
+                    
+                    // Employés
+                    'add-employee': 'employeeName',
+                    'manage-employees': 'employeesTable',
+                    'employee-stats': 'employeeStats',
                     'salary': 'salaryTable',
-                    'settings': 'defaultPricePerKg'
+                    
+                    // Pesage
+                    'weighing': 'employeeSearchInput',
+                    'weighing-list': 'weightsTable',
+                    'daily-stats': 'dailyStatsDate',
+                    
+                    // Finances
+                    'settings': 'defaultPricePerKg',
+                    'salary-calc': 'totalSalary',
+                    
+                    // Outils
+                    'search': 'nameFilter',
+                    'import-export': 'jsonFileInput',
+                    'database-check': 'defaultPricePerKg'
                 };
                 
                 const targetId = sectionMap[section];
@@ -5904,19 +6179,30 @@
                             inline: 'nearest'
                         });
                         
-                        // Effet highlight temporaire
-                        element.style.transition = 'all 0.3s ease';
-                        element.style.transform = 'scale(1.02)';
-                        element.style.boxShadow = '0 0 20px rgba(100, 116, 139, 0.3)';
+                        // Effet highlight temporaire sur la section parente
+                        const parentSection = element.closest('.form-section') || 
+                                            element.closest('.stats-grid') || 
+                                            element.closest('.glass-card') || 
+                                            element;
                         
-                        setTimeout(() => {
-                            element.style.transform = '';
-                            element.style.boxShadow = '';
-                        }, 600);
+                        if (parentSection) {
+                            parentSection.style.transition = 'all 0.3s ease';
+                            parentSection.style.transform = 'scale(1.01)';
+                            parentSection.style.boxShadow = '0 0 30px rgba(100, 116, 139, 0.3)';
+                            
+                            setTimeout(() => {
+                                parentSection.style.transform = '';
+                                parentSection.style.boxShadow = '';
+                            }, 600);
+                        }
                     }
                 }
-            }, sidebarOpen ? 400 : 0); // Attendre animation si sidebar était ouvert
+            }, sidebarOpen ? 400 : 0);
         };
+
+        // ========================================
+        // 🎯 EVENT LISTENERS
+        // ========================================
 
         // Fermer sidebar avec touche Escape
         document.addEventListener('keydown', (e) => {
@@ -5925,18 +6211,31 @@
             }
         });
 
-        // Empêcher propagation clicks dans sidebar
+        // Initialisation au chargement
         document.addEventListener('DOMContentLoaded', () => {
+            // Empêcher propagation clicks dans sidebar
             const sidebar = document.getElementById('sidebar');
             if (sidebar) {
                 sidebar.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Clicks dans sidebar ne ferment pas
+                    e.stopPropagation();
                 });
+            }
+            
+            // Ouvrir premier groupe par défaut
+            const firstGroup = document.getElementById('dashboard-group');
+            const firstHeader = document.querySelector('.nav-group-header');
+            if (firstGroup && firstHeader) {
+                firstGroup.classList.add('active');
+                firstHeader.classList.add('active');
             }
             
             // Initialiser thème sidebar
             updateThemeIconSidebar();
         });
+
+        // ========================================
+        // 🎯 GESTION DARK MODE
+        // ========================================
 
         // Mettre à jour icône thème dans sidebar
         const updateThemeIconSidebar = () => {
@@ -5972,6 +6271,10 @@
             }
         })();
 
+        // ========================================
+        // 🎯 GESTURES MOBILES
+        // ========================================
+
         // Détection swipe pour fermer sidebar sur mobile
         let touchStartX = 0;
         let touchEndX = 0;
@@ -5999,25 +6302,68 @@
             }
         }
 
-        // Animation burger menu
-        const menuToggle = document.getElementById('menuToggle');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => {
-                menuToggle.classList.toggle('active');
-            });
-        }
+        // ========================================
+        // 🎯 RESPONSIVE
+        // ========================================
 
         // Détection changement taille écran
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                // Fermer sidebar si on passe en mode desktop
+                // Fermer sidebar si on passe en mode desktop large
                 if (window.innerWidth >= 1400 && sidebarOpen) {
                     toggleSidebar();
                 }
             }, 250);
         });
+
+        // ========================================
+        // 🎯 UTILITAIRES
+        // ========================================
+
+        // Fonction pour scroller vers un élément avec offset
+        const scrollToElement = (elementId, offset = 80) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - offset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        };
+
+        // Détecter section active pendant le scroll (optionnel)
+        let scrollTimer;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                // Mettre à jour l'item actif basé sur la position scroll
+                updateActiveNavItem();
+            }, 100);
+        }, { passive: true });
+
+        function updateActiveNavItem() {
+            // Cette fonction peut être développée pour mettre à jour
+            // automatiquement l'item actif basé sur la section visible
+            // Pour l'instant, on la laisse vide
+        }
+
+        // ========================================
+        // 🎯 DEBUG (à retirer en production)
+        // ========================================
+
+        // Log pour vérifier le fonctionnement
+        const debugSidebar = () => {
+            console.log('Sidebar Open:', sidebarOpen);
+            console.log('Active Groups:', document.querySelectorAll('.nav-group-items.active').length);
+            console.log('Active Items:', document.querySelectorAll('.nav-item.active').length);
+        };
+
+        // Appeler avec: debugSidebar() dans la console
     </script>
 </body>
 </html>
