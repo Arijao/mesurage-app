@@ -91,7 +91,9 @@
             z-index: 2;
             font-weight: 800;
             background: linear-gradient(45deg, #fff, #f8fafc);
+            background-clip: text;
             -webkit-background-clip: text;
+
             -webkit-text-fill-color: transparent;
             text-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
@@ -306,7 +308,9 @@
             margin-bottom: 12px;
             font-weight: 800;
             background: linear-gradient(135deg, #64748b, #0f172a);
+            background-clip: text;
             -webkit-background-clip: text;
+
             -webkit-text-fill-color: transparent;
         }
 
@@ -1337,6 +1341,36 @@
             color: var(--text-primary);
         }
 
+        /* Validation du champ employé en temps réel */
+        .input-error {
+            border: 2px solid #ff4444 !important;
+            background-color: rgba(255, 68, 68, 0.1) !important;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .input-success {
+            border: 2px solid #4CAF50 !important;
+            background-color: rgba(76, 175, 80, 0.1) !important;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .duplicate-warning {
+            color: #ff4444;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
     </style>
 </head>
 <body>
@@ -1355,6 +1389,9 @@
                     <div class="error-message" id="employeeErrorMsg">Une erreur s'est produite!</div>
                     <div class="form-group">
                         <input type="text" id="employeeName" placeholder="Nom de l'employé" required>
+                        <div id="duplicateWarning" class="duplicate-warning">
+                            ⚠️ Cet employé existe déjà!
+                        </div>
                         <button class="btn" onclick="addEmployee()">Ajouter Employé</button>
                     </div>
                 </div>
@@ -1447,15 +1484,16 @@
                     <!-- Totaux généraux -->
                     <div class="stats-grid" style="margin-bottom: 24px;">
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));">
-                            <h3 id="totalSalary" style="background: linear-gradient(135deg, #059669, #047857); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                            <h3 id="totalSalary" style="background: linear-gradient(135deg, #059669, #047857); background-clip: text; -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;">0 Ar</h3>
                             <p>Total Salaires à Payer</p>
                         </div>
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));">
-                            <h3 id="monthlySalary" style="background: linear-gradient(135deg, #3b82f6, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                            <h3 id="monthlySalary" style="background: linear-gradient(135deg, #3b82f6, #2563eb); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
                             <p>Salaires du Mois</p>
                         </div>
                         <div class="stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));">
-                            <h3 id="todaySalary" style="background: linear-gradient(135deg, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                            <h3 id="todaySalary" style="background: linear-gradient(135deg, #f59e0b, #d97706); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
                             <p>Salaires Aujourd'hui</p>
                         </div>
                     </div>
@@ -2145,10 +2183,30 @@
             }; // ✅ mihidy tsara eto ny onupgradeneeded
         }; // ✅ mihidy koa ny initDB()
  
-
+        // Vérifier si un employé existe déjà (en temps réel)
+        const checkEmployeeExists = async (name) => {
+            if (!db || !name.trim()) {
+                return false;
+            }
+            
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['employees'], 'readonly');
+                const store = transaction.objectStore('employees');
+                const index = store.index('name');
+                const request = index.get(name.trim());
+                
+                request.onsuccess = () => {
+                    resolve(request.result !== undefined);
+                };
+                
+                request.onerror = () => {
+                    resolve(false);
+                };
+            });
+        };
 
         // Ajouter un nouvel employé
-        const addEmployee = () => {
+        const addEmployee = async () => {
             if (!db) {
                 showMessage('employeeErrorMsg', 'La base de données n\'est pas encore prête. Veuillez patienter...');
                 return;
@@ -2157,6 +2215,13 @@
             const name = document.getElementById('employeeName').value.trim();
             if (!name) {
                 showMessage('employeeErrorMsg', 'Le nom est obligatoire!');
+                return;
+            }
+
+            // Vérifier si l'employé existe déjà avant l'ajout
+            const exists = await checkEmployeeExists(name);
+            if (exists) {
+                showMessage('employeeErrorMsg', 'Cet employé existe déjà dans la base de données!');
                 return;
             }
 
@@ -3738,9 +3803,36 @@
             // MAINTENANT AJOUTER LES EVENT LISTENERS
             
             // Event listeners de base
+            // Validation en direct du nom d'employé
+            document.getElementById('employeeName').addEventListener('input', async (e) => {
+                const nameInput = e.target;
+                const name = nameInput.value.trim();
+                const warningDiv = document.getElementById('duplicateWarning');
+                
+                if (!name) {
+                    nameInput.classList.remove('input-error', 'input-success');
+                    warningDiv.style.display = 'none';
+                    return;
+                }
+                
+                const exists = await checkEmployeeExists(name);
+                
+                if (exists) {
+                    nameInput.classList.add('input-error');
+                    nameInput.classList.remove('input-success');
+                    warningDiv.style.display = 'block';
+                } else {
+                    nameInput.classList.remove('input-error');
+                    nameInput.classList.add('input-success');
+                    warningDiv.style.display = 'none';
+                }
+            });
+
+            // Garder la fonction Enter pour ajouter rapidement
             document.getElementById('employeeName').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addEmployee();
             });
+
             
             document.getElementById('weight').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addWeight();
