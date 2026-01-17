@@ -1371,9 +1371,384 @@
             75% { transform: translateX(5px); }
         }
 
+        /* ========================================
+        MENU HAMBURGER GLASSMORPHISM
+        ======================================== */
+
+        .side-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-nav.closed {
+            width: 80px;
+        }
+
+        .nav-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .side-nav.closed .logo-icon {
+            transform: scale(1.2);
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #059669, #10b981);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .side-nav.closed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-toggle {
+            background: rgba(59, 130, 246, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-toggle:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: scale(1.05);
+        }
+
+        .hamburger-line {
+            width: 20px;
+            height: 2px;
+            background: #3b82f6;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .side-nav.closed .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translateY(7px);
+        }
+
+        .side-nav.closed .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .side-nav.closed .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translateY(-7px);
+        }
+
+        /* MENU ITEMS */
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            margin: 4px 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+            color: #3b82f6;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+            min-width: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.2);
+        }
+
+        .nav-text {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .side-nav.closed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        /* TOOLTIPS QUAND FERMÉ */
+        .nav-tooltip {
+            position: absolute;
+            left: 80px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .side-nav.closed .nav-item:hover .nav-tooltip {
+            opacity: 1;
+            left: 90px;
+        }
+
+        /* FOOTER */
+        .nav-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .theme-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 10px;
+            color: #d97706;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .side-nav.closed .theme-btn {
+            justify-content: center;
+        }
+
+        /* OVERLAY MOBILE */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* CONTENU PRINCIPAL */
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+
+        .side-nav.closed + .nav-overlay + .main-content,
+        .side-nav.closed ~ .main-content {
+            margin-left: 80px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .side-nav {
+                transform: translateX(-100%);
+            }
+
+            .side-nav.open {
+                transform: translateX(0);
+            }
+
+            .side-nav.closed {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* DARK MODE */
+        body.dark-mode .side-nav {
+            background: rgba(15, 23, 42, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .nav-item {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .nav-item:hover {
+            color: #60a5fa;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        body.dark-mode .nav-item.active {
+            color: #60a5fa;
+        }
+
+        /* ANIMATIONS */
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .nav-item {
+            animation: slideIn 0.3s ease backwards;
+        }
+
+        .nav-item:nth-child(1) { animation-delay: 0.1s; }
+        .nav-item:nth-child(2) { animation-delay: 0.15s; }
+        .nav-item:nth-child(3) { animation-delay: 0.2s; }
+        .nav-item:nth-child(4) { animation-delay: 0.25s; }
+        .nav-item:nth-child(5) { animation-delay: 0.3s; }
+
+
     </style>
 </head>
 <body>
+
+    <!-- MENU HAMBURGER GLASSMORPHISM -->
+    <div id="sideNav" class="side-nav">
+        <div class="nav-header">
+            <div class="logo-section">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">BEHAVANA</span>
+            </div>
+            <button class="nav-toggle" onclick="toggleNav()">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#" class="nav-item" data-section="dashboard" onclick="showSection('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Dashboard</span>
+                <span class="nav-tooltip">Dashboard</span>
+            </a>
+
+            <a href="#" class="nav-item" data-section="employees" onclick="showSection('employees')">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">Employés</span>
+                <span class="nav-tooltip">Employés</span>
+            </a>
+
+            <a href="#" class="nav-item" data-section="weighing" onclick="showSection('weighing')">
+                <span class="nav-icon">⚖️</span>
+                <span class="nav-text">Pesage</span>
+                <span class="nav-tooltip">Pesage</span>
+            </a>
+
+            <a href="#" class="nav-item" data-section="finance" onclick="showSection('finance')">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Finances</span>
+                <span class="nav-tooltip">Finances</span>
+            </a>
+
+            <a href="#" class="nav-item" data-section="tools" onclick="showSection('tools')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Outils</span>
+                <span class="nav-tooltip">Outils</span>
+            </a>
+        </nav>
+
+        <div class="nav-footer">
+            <button class="theme-btn" onclick="toggleDarkMode()">
+                <span class="nav-icon">🌙</span>
+                <span class="nav-text">Mode Sombre</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- OVERLAY POUR MOBILE -->
+    <div id="navOverlay" class="nav-overlay" onclick="closeNav()"></div>
+
+    <!-- CONTENU PRINCIPAL AVEC MARGE -->
+    <div id="mainContent" class="main-content">
+        <!-- Tout votre contenu existant ici -->
+    </div>
+
+    <!--=============================================================================================
+    =================================================================================================-->
     <div class="container">
         <div class="glass-card">
             <div class="header">
@@ -5179,7 +5554,223 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         }
 
+
+        /* ========================================
+        JAVASCRIPT MENU NAVIGATION - VERSION FINALE COMPLÈTE
+        Inclut toutes les sections importantes
+        ======================================== */
+
+        // Toggle menu ouvert/fermé
+        function toggleNav() {
+            const sideNav = document.getElementById('sideNav');
+            sideNav.classList.toggle('closed');
+
+            // Sauvegarder l'état
+            localStorage.setItem('navClosed', sideNav.classList.contains('closed'));
+        }
+
+        // Fermer le menu (mobile)
+        function closeNav() {
+            const sideNav = document.getElementById('sideNav');
+            const overlay = document.getElementById('navOverlay');
+
+            sideNav.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        // Ouvrir le menu (mobile)
+        function openNav() {
+            const sideNav = document.getElementById('sideNav');
+            const overlay = document.getElementById('navOverlay');
+
+            sideNav.classList.add('open');
+            overlay.classList.add('active');
+        }
+
+        // Afficher une section et cacher les autres
+        function showSection(sectionName) {
+            // Retirer la classe active de tous les items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Ajouter la classe active à l'item cliqué
+            const clickedItem = document.querySelector(`[data-section="${sectionName}"]`);
+            if (clickedItem) {
+                clickedItem.classList.add('active');
+            }
+
+            // Cacher toutes les sections d'abord
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Cacher les stats-grid aussi
+            document.querySelectorAll('.stats-grid').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Afficher les sections appropriées selon la catégorie
+            switch(sectionName) {
+                case 'dashboard':
+                    showDashboardSections();
+                    break;
+
+                case 'employees':
+                    showEmployeeSections();
+                    break;
+
+                case 'weighing':
+                    showWeighingSections();
+                    break;
+
+                case 'finance':
+                    showFinanceSections();
+                    break;
+
+                case 'tools':
+                    showToolsSections();
+                    break;
+            }
+
+            // Fermer le menu sur mobile après sélection
+            if (window.innerWidth <= 768) {
+                closeNav();
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // DASHBOARD : Afficher les statistiques générales + aperçu salaires
+        function showDashboardSections() {
+            // Afficher TOUTES les stats-grid (statistiques globales)
+            document.querySelectorAll('.stats-grid').forEach(el => {
+                el.style.display = 'grid';
+            });
+
+            // Afficher le calcul des salaires et répartition
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(section => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    const text = h2.textContent.toLowerCase();
+                    if (text.includes('calcul des salaires') || 
+                        text.includes('répartition des salaires')) {
+                        section.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // EMPLOYÉS : Gestion + Statistiques détaillées ⭐
+        function showEmployeeSections() {
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(section => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    const text = h2.textContent.toLowerCase();
+                    // Inclure TOUTES les sections liées aux employés
+                    if (text.includes('ajouter') && text.includes('employé') ||
+                        text.includes('gestion des employés') ||
+                        text.includes('statistiques détaillées par employé') ||
+                        text.includes('détail des salaires par employé')) {
+                        section.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // PESAGE : Enregistrement + Liste + Statistiques quotidiennes
+        function showWeighingSections() {
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(section => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    const text = h2.textContent.toLowerCase();
+                    if (text.includes('enregistrement du pesage') ||
+                        text.includes('liste des pesages') || 
+                        text.includes('statistiques quotidiennes')) {
+                        section.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // FINANCES : Salaires + Prix + Répartition + RÉCAPITULATIF GLOBAL ⭐
+        function showFinanceSections() {
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(section => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    const text = h2.textContent.toLowerCase();
+                    if (text.includes('prix par défaut') || 
+                        text.includes('calcul des salaires') ||
+                        text.includes('répartition des salaires') ||
+                        text.includes('détail des salaires par employé')) {
+                        section.style.display = 'block';
+                    }
+                }
+            });
+
+            // Le RÉCAPITULATIF GLOBAL est dans #salaryByQualityGrid
+            // Il est affiché automatiquement avec "Répartition des Salaires"
+        }
+
+        // OUTILS : Recherche + Import/Export + Vérification
+        function showToolsSections() {
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(section => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    const text = h2.textContent.toLowerCase();
+                    if (text.includes('recherche') || 
+                        text.includes('filtrage') ||
+                        text.includes('import') || 
+                        text.includes('export') || 
+                        text.includes('vérification')) {
+                        section.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Charger l'état du menu au démarrage
+        window.addEventListener('DOMContentLoaded', () => {
+            const navClosed = localStorage.getItem('navClosed') === 'true';
+            const sideNav = document.getElementById('sideNav');
+
+            if (navClosed && sideNav) {
+                sideNav.classList.add('closed');
+            }
+
+            // Afficher dashboard par défaut
+            showSection('dashboard');
+        });
+
+        // Gestion du responsive
+        window.addEventListener('resize', () => {
+            const sideNav = document.getElementById('sideNav');
+            const overlay = document.getElementById('navOverlay');
+
+            if (window.innerWidth > 768) {
+                // Desktop : retirer les classes mobile
+                if (sideNav) sideNav.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+
+        // Fonction helper pour debug (optionnel)
+        function debugSections() {
+            console.log('=== DEBUG SECTIONS ===');
+            document.querySelectorAll('.form-section').forEach((section, i) => {
+                const h2 = section.querySelector('h2');
+                if (h2) {
+                    console.log(`${i + 1}. ${h2.textContent} - Display: ${section.style.display}`);
+                }
+            });
+        }
+
     </script>
-    <script src="theme.js"></script>
 </body>
 </html>
