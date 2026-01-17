@@ -2183,6 +2183,19 @@
             }; // ✅ mihidy tsara eto ny onupgradeneeded
         }; // ✅ mihidy koa ny initDB()
  
+        // ============================================
+        // VALIDATION EMPLOYÉ - NE PAS MODIFIER
+        // ============================================
+
+        // Capitaliser la première lettre de chaque mot
+        const capitalizeNames = (str) => {
+            return str
+                .toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        };
+
         // Vérifier si un employé existe déjà (en temps réel)
         const checkEmployeeExists = async (name) => {
             if (!db || !name.trim()) {
@@ -2212,20 +2225,14 @@
                 return;
             }
 
-            const name = document.getElementById('employeeName').value.trim();
-            if (!name) {
+            const nameInput = document.getElementById('employeeName').value.trim();
+            if (!nameInput) {
                 showMessage('employeeErrorMsg', 'Le nom est obligatoire!');
                 return;
             }
 
-            // Capitaliser la première lettre de chaque mot
-            const capitalizeNames = (str) => {
-                return str
-                    .toLowerCase()
-                    .split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-            };
+            // Capitaliser le nom
+            const name = capitalizeNames(nameInput);
 
             // Vérifier si l'employé existe déjà avant l'ajout
             const exists = await checkEmployeeExists(name);
@@ -2239,7 +2246,7 @@
             const employee = { 
                 name: name, 
                 createdAt: new Date().toISOString(),
-                alertNote: '' // ⭐ NOUVEAU
+                alertNote: ''
             };
             
             const request = store.add(employee);
@@ -2257,6 +2264,7 @@
                 showMessage('employeeErrorMsg', 'Cet employé existe déjà ou une erreur s\'est produite!');
             };
         };
+
 
         // Charger tous les employés en mémoire
         const loadAllEmployees = () => {
