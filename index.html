@@ -2218,6 +2218,15 @@
                 return;
             }
 
+            // Capitaliser la première lettre de chaque mot
+            const capitalizeNames = (str) => {
+                return str
+                    .toLowerCase()
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            };
+
             // Vérifier si l'employé existe déjà avant l'ajout
             const exists = await checkEmployeeExists(name);
             if (exists) {
@@ -3803,13 +3812,23 @@
             // MAINTENANT AJOUTER LES EVENT LISTENERS
             
             // Event listeners de base
-            // Validation en direct du nom d'employé
+            // Validation en direct du nom d'employé avec capitalisation
             document.getElementById('employeeName').addEventListener('input', async (e) => {
                 const nameInput = e.target;
-                const name = nameInput.value.trim();
+                let name = nameInput.value;
+                
+                // Capitaliser automatiquement
+                if (name) {
+                    const cursorPosition = nameInput.selectionStart;
+                    const capitalizedName = capitalizeNames(name);
+                    nameInput.value = capitalizedName;
+                    nameInput.setSelectionRange(cursorPosition, cursorPosition);
+                    name = capitalizedName.trim();
+                }
+                
                 const warningDiv = document.getElementById('duplicateWarning');
                 
-                if (!name) {
+                if (!name.trim()) {
                     nameInput.classList.remove('input-error', 'input-success');
                     warningDiv.style.display = 'none';
                     return;
@@ -3827,6 +3846,7 @@
                     warningDiv.style.display = 'none';
                 }
             });
+
 
             // Garder la fonction Enter pour ajouter rapidement
             document.getElementById('employeeName').addEventListener('keypress', (e) => {
