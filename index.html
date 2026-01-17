@@ -1746,6 +1746,213 @@
                 height: 45px;
             }
         }
+
+        /* ========================================
+        🎯 TOOLTIPS
+        ======================================== */
+
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(10px);
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-tooltip]::before {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%) translateX(4px);
+            border: 6px solid transparent;
+            border-right-color: rgba(15, 23, 42, 0.95);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 10001;
+        }
+
+        [data-tooltip]:hover::after,
+        [data-tooltip]:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Dark mode tooltips */
+        [data-theme="dark"] [data-tooltip]::after {
+            background: rgba(248, 250, 252, 0.95);
+            color: #0f172a;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] [data-tooltip]::before {
+            border-right-color: rgba(248, 250, 252, 0.95);
+        }
+
+        /* ========================================
+        🎯 SCROLL LOCK quand sidebar ouvert
+        ======================================== */
+
+        body.sidebar-open {
+            overflow: hidden !important;
+            padding-right: 15px; /* Compenser scrollbar disparue */
+        }
+
+        /* Fixer le burger menu quand scroll locked */
+        body.sidebar-open .menu-toggle {
+            right: 15px; /* Compenser scrollbar */
+        }
+
+        /* ========================================
+        🎯 SIDEBAR - Click uniquement dans sidebar
+        ======================================== */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* ⬅️ Scroll uniquement dans sidebar */
+            overflow-x: hidden;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        /* Scrollbar personnalisée pour sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.6);
+        }
+
+        /* Empêcher scroll du contenu principal */
+        .main-content {
+            transition: filter 0.3s ease;
+        }
+
+        body.sidebar-open .main-content {
+            filter: blur(2px); /* ⬅️ Effet blur sur contenu */
+            pointer-events: none; /* ⬅️ Désactiver clicks */
+        }
+
+        /* Overlay plus visible */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* ⬅️ Plus sombre */
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 9998;
+            cursor: pointer; /* ⬅️ Indiquer cliquable */
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ========================================
+        🎯 TOOLTIPS pour items navigation
+        ======================================== */
+
+        /* Version desktop : tooltips à droite */
+        @media (min-width: 769px) {
+            .nav-item[data-tooltip]::after {
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%) translateX(10px);
+            }
+            
+            .nav-item[data-tooltip]::before {
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%) translateX(4px);
+                border-right-color: rgba(15, 23, 42, 0.95);
+                border-left-color: transparent;
+            }
+        }
+
+        /* Version mobile : tooltips en haut */
+        @media (max-width: 768px) {
+            .nav-item[data-tooltip]::after {
+                left: 50%;
+                top: auto;
+                bottom: 100%;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            
+            .nav-item[data-tooltip]::before {
+                left: 50%;
+                top: auto;
+                bottom: 100%;
+                transform: translateX(-50%) translateY(-4px);
+                border-top-color: rgba(15, 23, 42, 0.95);
+                border-right-color: transparent;
+            }
+        }
+
+        /* Animation tooltip */
+        @keyframes tooltipSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(10px);
+            }
+        }
+
+        [data-tooltip]:hover::after {
+            animation: tooltipSlide 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -1804,8 +2011,9 @@
         </div>
     </div>
 
-    <!-- 🎯 BURGER MENU BUTTON -->
-    <button id="menuToggle" class="menu-toggle" onclick="toggleSidebar()">
+    <!-- 🎯 BURGER MENU BUTTON avec Tooltip -->
+    <button id="menuToggle" class="menu-toggle" onclick="toggleSidebar()" 
+            data-tooltip="Menu Navigation">
         <span></span>
         <span></span>
         <span></span>
@@ -5606,14 +5814,6 @@
             updateDailyQualityStats();
         };
 
-        
-        const toggleDarkMode = () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        };
-
         // Charger au démarrage
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
@@ -5621,7 +5821,7 @@
         }
 
         // ========================================
-        // 🎯 SIDEBAR NAVIGATION
+        // 🎯 SIDEBAR NAVIGATION avec SCROLL LOCK
         // ========================================
 
         let sidebarOpen = false;
@@ -5630,52 +5830,92 @@
             sidebarOpen = !sidebarOpen;
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
             
             if (sidebarOpen) {
+                // Ouvrir sidebar
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Empêcher scroll
+                body.classList.add('sidebar-open');
+                
+                // Sauvegarder position scroll actuelle
+                const scrollY = window.scrollY;
+                body.style.position = 'fixed';
+                body.style.top = `-${scrollY}px`;
+                body.style.width = '100%';
+                
             } else {
+                // Fermer sidebar
                 sidebar.classList.remove('active');
                 overlay.classList.remove('active');
-                document.body.style.overflow = '';
+                body.classList.remove('sidebar-open');
+                
+                // Restaurer position scroll
+                const scrollY = body.style.top;
+                body.style.position = '';
+                body.style.top = '';
+                body.style.width = '';
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
             }
         };
 
-        // Navigation entre sections
+        // Navigation entre sections (ferme sidebar automatiquement)
         const navigateTo = (section) => {
-            // Fermer sidebar sur mobile
-            if (window.innerWidth < 768) {
+            // Fermer sidebar d'abord
+            if (sidebarOpen) {
                 toggleSidebar();
             }
             
-            // Retirer classe active de tous les items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Ajouter active à l'item cliqué
-            event.target.closest('.nav-item').classList.add('active');
-            
-            // Scroll vers la section (vous pouvez adapter selon vos IDs)
-            const sectionMap = {
-                'dashboard': 'totalEmployees',
-                'employees': 'employeesTable',
-                'weighing': 'employeeSearchInput',
-                'quality-stats': 'salaryByQualityGrid',
-                'daily-stats': 'dailyStatsDate',
-                'search': 'nameFilter',
-                'salary': 'salaryTable',
-                'settings': 'defaultPricePerKg'
-            };
-            
-            const targetId = sectionMap[section];
-            if (targetId) {
-                const element = document.getElementById(targetId);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Attendre que sidebar se ferme avant de scroller
+            setTimeout(() => {
+                // Retirer classe active de tous les items
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Ajouter active à l'item cliqué
+                if (event && event.target) {
+                    const clickedItem = event.target.closest('.nav-item');
+                    if (clickedItem) {
+                        clickedItem.classList.add('active');
+                    }
                 }
-            }
+                
+                // Mapping des sections vers IDs d'éléments
+                const sectionMap = {
+                    'dashboard': 'totalEmployees',
+                    'employees': 'employeesTable',
+                    'weighing': 'employeeSearchInput',
+                    'quality-stats': 'salaryByQualityGrid',
+                    'daily-stats': 'dailyStatsDate',
+                    'search': 'nameFilter',
+                    'salary': 'salaryTable',
+                    'settings': 'defaultPricePerKg'
+                };
+                
+                const targetId = sectionMap[section];
+                if (targetId) {
+                    const element = document.getElementById(targetId);
+                    if (element) {
+                        // Scroll smooth vers la section
+                        element.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start',
+                            inline: 'nearest'
+                        });
+                        
+                        // Effet highlight temporaire
+                        element.style.transition = 'all 0.3s ease';
+                        element.style.transform = 'scale(1.02)';
+                        element.style.boxShadow = '0 0 20px rgba(100, 116, 139, 0.3)';
+                        
+                        setTimeout(() => {
+                            element.style.transform = '';
+                            element.style.boxShadow = '';
+                        }, 600);
+                    }
+                }
+            }, sidebarOpen ? 400 : 0); // Attendre animation si sidebar était ouvert
         };
 
         // Fermer sidebar avec touche Escape
@@ -5685,39 +5925,99 @@
             }
         });
 
+        // Empêcher propagation clicks dans sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Clicks dans sidebar ne ferment pas
+                });
+            }
+            
+            // Initialiser thème sidebar
+            updateThemeIconSidebar();
+        });
+
         // Mettre à jour icône thème dans sidebar
         const updateThemeIconSidebar = () => {
             const theme = document.documentElement.getAttribute('data-theme');
             const icon = document.getElementById('themeIconSidebar');
             const text = document.getElementById('themeTextSidebar');
             
-            if (theme === 'dark') {
-                icon.textContent = '☀️';
-                text.textContent = 'Mode Clair';
-            } else {
-                icon.textContent = '🌙';
-                text.textContent = 'Mode Sombre';
+            if (icon && text) {
+                if (theme === 'dark') {
+                    icon.textContent = '☀️';
+                    text.textContent = 'Mode Clair';
+                } else {
+                    icon.textContent = '🌙';
+                    text.textContent = 'Mode Sombre';
+                }
             }
         };
 
-        // Appeler au chargement
-        document.addEventListener('DOMContentLoaded', () => {
-            updateThemeIconSidebar();
-        });
-
-        // Modifier toggleDarkMode existant pour mettre à jour sidebar
-        const originalToggleDarkMode = toggleDarkMode;
-        toggleDarkMode = () => {
-            if (typeof originalToggleDarkMode === 'function') {
-                originalToggleDarkMode();
-            }
+        // Fonction toggleDarkMode améliorée
+        const toggleDarkMode = () => {
             const current = document.documentElement.getAttribute('data-theme');
             const newTheme = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIconSidebar();
         };
+
+        // Charger thème sauvegardé au démarrage
+        (function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+
+        // Détection swipe pour fermer sidebar sur mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            if (sidebarOpen) {
+                touchStartX = e.changedTouches[0].screenX;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (sidebarOpen) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const swipeDistance = touchStartX - touchEndX;
+            
+            // Swipe vers la gauche = fermer sidebar
+            if (swipeDistance > swipeThreshold) {
+                toggleSidebar();
+            }
+        }
+
+        // Animation burger menu
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+            });
+        }
+
+        // Détection changement taille écran
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // Fermer sidebar si on passe en mode desktop
+                if (window.innerWidth >= 1400 && sidebarOpen) {
+                    toggleSidebar();
+                }
+            }, 250);
+        });
     </script>
-    <script src="theme.js"></script>
 </body>
 </html>
