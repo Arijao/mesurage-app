@@ -2889,6 +2889,13 @@
     </button>
 
     <script>
+        /* ========================================
+        🔧 VARIABLES GLOBALES SIDEBAR
+        ======================================== */
+        let sidebarOpen = false; // État de la sidebar (ouverte/fermée)
+        let touchStartX = 0; // Position de départ du toucher (mobile)
+        let touchEndX = 0; // Position de fin du toucher (mobile)
+
         // Configuration IndexedDB
         let db;
         const dbName = 'VanillaWeighingDB';
@@ -6302,10 +6309,6 @@
         // ========================================
         // 🎯 GESTURES MOBILES
         // ========================================
-
-        // Détection swipe pour fermer sidebar sur mobile
-        let touchStartX = 0;
-        let touchEndX = 0;
 
         document.addEventListener('touchstart', (e) => {
             if (sidebarOpen) {
