@@ -6522,7 +6522,7 @@
         // -------------------------------
         // FIN helpers
         // -------------------------------
-        // ⭐ BONUS: Reprendre dernière saisie
+        //  BONUS: Reprendre dernière saisie
         const fillLastEntry = () => {
             const transaction = db.transaction(['weights'], 'readonly');
             const store = transaction.objectStore('weights');
@@ -6550,7 +6550,7 @@
             };
         };
 
-        // ⭐ NOUVEAU: Mettre à jour les statistiques quotidiennes par qualité
+        //  NOUVEAU: Mettre à jour les statistiques quotidiennes par qualité
         // REPLACE the existing updateDailyQualityStats with this full implementation
         const updateDailyQualityStats = () => {
             const selectedDate = document.getElementById('dailyStatsDate').value;
@@ -6574,7 +6574,7 @@
                 // Filtrer par date
                 let dailyWeights = weights.filter(w => w.date === selectedDate);
 
-                // ⭐ FILTRER PAR EMPLOYÉ si sélectionné
+                //  FILTRER PAR EMPLOYÉ si sélectionné
                 if (dailyStatsSelectedEmployee) {
                     dailyWeights = dailyWeights.filter(w => w.employeeId === dailyStatsSelectedEmployee.id);
                 }
@@ -6603,11 +6603,11 @@
 
                 document.getElementById('selectedDateDisplay').innerHTML = dateDisplay;
 
-                // ⭐ NOUVEAU: Récupérer limites personnalisées
+                //  NOUVEAU: Récupérer limites personnalisées
                 const minLimit = parseFloat(document.getElementById('minWeightFilter').value) || 0;
                 const maxLimit = parseFloat(document.getElementById('maxWeightFilter').value) || Infinity;
 
-                // ⭐ NOUVEAU: Grouper par employé ET par qualité pour total
+                //  NOUVEAU: Grouper par employé ET par qualité pour total
                 const employeeQualityTotals = {}; // { employeeId: { qualityName: totalWeight } }
 
                 dailyWeights.forEach(w => {
@@ -6630,7 +6630,7 @@
                     employeeQualityTotals[w.employeeId].qualities[qualityName].count += 1;
                 });
 
-                // ⭐ NOUVEAU: Organiser par qualité
+                //  NOUVEAU: Organiser par qualité
                 const qualityEmployeeLists = {}; // { qualityName: { over: [], under: [], inRange: [] } }
 
                 Object.entries(employeeQualityTotals).forEach(([empId, empData]) => {
@@ -6923,7 +6923,7 @@
             });
         };
 
-        // ⭐ RECHERCHE INTELLIGENTE POUR STATS QUOTIDIENNES
+        //  RECHERCHE INTELLIGENTE POUR STATS QUOTIDIENNES
         let dailyStatsSelectedEmployee = null;
 
         const showDailyStatsEmployeeDropdown = () => {
@@ -7002,7 +7002,7 @@
             }
         });
 
-        // ⭐ SYSTÈME D'ALERTE EMPLOYÉ
+        //  SYSTÈME D'ALERTE EMPLOYÉ
 
         // Ouvrir modal édition note
         const editEmployeeNote = (id, name, currentNote) => {
@@ -7094,7 +7094,7 @@
         }
 
         /* ========================================
-        🔧 FONCTION TOGGLE SIDEBAR - CORRIGÉE
+         FONCTION TOGGLE SIDEBAR - CORRIGÉE
         ======================================== */
         const toggleSidebar = () => {
             sidebarOpen = !sidebarOpen;
@@ -7144,7 +7144,7 @@
 
 
         // ========================================
-        // 🎯 GESTION DES GROUPES ACCORDÉON
+        //  GESTION DES GROUPES ACCORDÉON
         // ========================================
 
         const toggleGroup = (groupId) => {
@@ -7173,7 +7173,7 @@
         };
 
         // ========================================
-        // 🎯 EVENT LISTENERS
+        //  EVENT LISTENERS
         // ========================================
 
         // Fermer sidebar avec touche Escape
@@ -7206,7 +7206,7 @@
         });
 
         // ========================================
-        // 🎯 GESTURES MOBILES
+        //  GESTURES MOBILES
         // ========================================
 
         document.addEventListener('touchstart', (e) => {
@@ -7233,7 +7233,7 @@
         }
 
         // ========================================
-        // 🎯 RESPONSIVE
+        //  RESPONSIVE
         // ========================================
 
         // Détection changement taille écran
@@ -7249,7 +7249,7 @@
         });
 
         // ========================================
-        // 🎯 UTILITAIRES
+        //  UTILITAIRES
         // ========================================
 
         // Fonction pour scroller vers un élément avec offset
@@ -7277,7 +7277,7 @@
         }, { passive: true });
 
         // ========================================
-        // 🎯 DEBUG (à retirer en production)
+        //  DEBUG (à retirer en production)
         // ========================================
 
         // Log pour vérifier le fonctionnement
@@ -7290,7 +7290,7 @@
         // Appeler avec: debugSidebar() dans la console
 
         /* ========================================
-        💵 DÉTAILS SALAIRES - FONCTIONS
+         DÉTAILS SALAIRES - FONCTIONS
         ======================================== */
 
         /**
@@ -7582,7 +7582,7 @@
         };
 
         // ========================================
-        // 🎯 INDICATEUR SCROLL TABLEAUX
+        //  INDICATEUR SCROLL TABLEAUX
         // ========================================
         const setupScrollIndicator = () => {
             document.querySelectorAll('.table-container').forEach(container => {
@@ -7612,6 +7612,267 @@
         window.addEventListener('resize', () => {
             setTimeout(setupScrollIndicator, 300);
         });
+        /* ========================================
+         PWA - ENREGISTREMENT SERVICE WORKER
+        ======================================== */
+
+        // Vérifier si le navigateur supporte les Service Workers
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                registerServiceWorker();
+                checkForUpdates();
+                setupInstallPrompt();
+            });
+        }
+
+        /**
+         * Enregistrer le Service Worker
+         */
+        async function registerServiceWorker() {
+            try {
+                const registration = await navigator.serviceWorker.register('./service-worker.js', {
+                    scope: './'
+                });
+                
+                console.log('✅ Service Worker enregistré avec succès:', registration.scope);
+                
+                // Vérifier les mises à jour toutes les heures
+                setInterval(() => {
+                    registration.update();
+                }, 60 * 60 * 1000); // 1 heure
+                
+                // Écouter les changements d'état
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('🔄 Nouvelle version détectée');
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Nouvelle version disponible
+                            showUpdateNotification();
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'enregistrement du Service Worker:', error);
+            }
+        }
+
+        /**
+         * Vérifier les mises à jour
+         */
+        async function checkForUpdates() {
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    registration.update();
+                }
+            }
+        }
+
+        /**
+         * Afficher une notification de mise à jour
+         */
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.id = 'update-banner';
+            updateBanner.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; z-index: 10000; 
+                            background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+                            color: white; padding: 16px 24px; border-radius: 12px; 
+                            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); 
+                            display: flex; align-items: center; gap: 16px;
+                            animation: slideInRight 0.5s ease;">
+                    <span style="font-weight: 600; font-size: 0.95rem;">
+                        🎉 Nouvelle version disponible !
+                    </span>
+                    <button onclick="updateApp()" 
+                            style="background: white; color: #059669; border: none; 
+                                padding: 8px 16px; border-radius: 8px; font-weight: 600; 
+                                cursor: pointer; font-size: 0.9rem;">
+                        Mettre à jour
+                    </button>
+                    <button onclick="this.closest('div').remove()" 
+                            style="background: transparent; border: 1px solid white; 
+                                color: white; padding: 8px 12px; border-radius: 8px; 
+                                cursor: pointer; font-size: 0.9rem;">
+                        Plus tard
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(updateBanner);
+        }
+
+        /**
+         * Mettre à jour l'application
+         */
+        function updateApp() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(registration => {
+                    if (registration && registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+
+        /**
+         * Gérer le prompt d'installation PWA
+         */
+        let deferredPrompt;
+
+        function setupInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Empêcher le prompt automatique
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Afficher un bouton d'installation personnalisé
+                showInstallButton();
+            });
+            
+            // Détecter quand l'app est installée
+            window.addEventListener('appinstalled', () => {
+                console.log('✅ PWA installée avec succès');
+                deferredPrompt = null;
+                hideInstallButton();
+                
+                // Message de succès
+                showMessage('✅ Application installée avec succès !', 'success');
+            });
+        }
+
+        /**
+         * Afficher le bouton d'installation
+         */
+        function showInstallButton() {
+            // Vérifier si déjà installé
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return; // Déjà installé
+            }
+            
+            const installBtn = document.createElement('button');
+            installBtn.id = 'install-pwa-btn';
+            installBtn.innerHTML = '📲 Installer l\'application';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 9999;
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                border: none;
+                padding: 14px 24px;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                cursor: pointer;
+                box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+                transition: all 0.3s ease;
+                animation: bounceIn 0.6s ease;
+            `;
+            
+            installBtn.addEventListener('click', installPWA);
+            installBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px)';
+                this.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.5)';
+            });
+            installBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.4)';
+            });
+            
+            document.body.appendChild(installBtn);
+        }
+
+        /**
+         * Masquer le bouton d'installation
+         */
+        function hideInstallButton() {
+            const installBtn = document.getElementById('install-pwa-btn');
+            if (installBtn) {
+                installBtn.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => installBtn.remove(), 300);
+            }
+        }
+
+        /**
+         * Installer la PWA
+         */
+        async function installPWA() {
+            if (!deferredPrompt) {
+                return;
+            }
+            
+            // Afficher le prompt d'installation
+            deferredPrompt.prompt();
+            
+            // Attendre la réponse de l'utilisateur
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            console.log(`Installation: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                console.log('✅ Utilisateur a accepté l\'installation');
+            } else {
+                console.log('❌ Utilisateur a refusé l\'installation');
+            }
+            
+            deferredPrompt = null;
+            hideInstallButton();
+        }
+
+        /**
+         * Détecter si l'app tourne en mode PWA
+         */
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true;
+        }
+
+        if (isPWA()) {
+            console.log('📱 Application lancée en mode PWA');
+            // Masquer les éléments spécifiques navigateur si nécessaire
+        }
+
+        /**
+         * Vérifier le statut de connexion
+         */
+        window.addEventListener('online', () => {
+            console.log('🌐 Connexion rétablie');
+            showMessage('✅ Connexion Internet rétablie', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('📴 Mode hors ligne');
+            showMessage('📴 Mode hors ligne - Vos données sont toujours accessibles', 'info');
+        });
+
+        // Animation pour le bouton d'installation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes bounceIn {
+                0% { transform: scale(0); opacity: 0; }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; transform: scale(1); }
+                to { opacity: 0; transform: scale(0.8); }
+            }
+            
+            @keyframes slideInRight {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        console.log('📱 PWA initialisée et prête');
+
     </script>
 </body>
 </html>
