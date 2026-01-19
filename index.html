@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pesage Vanille - Suivi quotidien</title>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -14,13 +14,23 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
             min-height: 100vh;
-            padding: 80px 15px 15px 15px; /* ⬅️ Padding-top pour burger menu */
+            padding: 80px 15px 15px 15px;
             position: relative;
             overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
             transition: padding 0.3s ease; /* ⬅️ Transition smooth */
         }
 
@@ -99,18 +109,27 @@
         }
 
         /* ⬅️ NOUVEAU : Mode desktop avec sidebar permanent (optionnel) */
+        /* ✅ NOUVELLE VERSION - Burger menu visible partout */
         @media (min-width: 1400px) {
+            /* Garder la même expérience sur tous les appareils */
             body {
-                padding-left: 340px; /* ⬅️ Espace pour sidebar permanent */
-                transition: padding-left 0.4s ease;
+                padding: 80px 15px 15px 15px; /* Même padding que mobile */
             }
             
+            /* Sidebar cachée par défaut, même sur desktop */
             .sidebar {
-                left: 0 !important; /* ⬅️ Sidebar toujours visible */
+                left: -320px; /* Cachée par défaut */
             }
             
+            /* Burger menu toujours visible */
             .menu-toggle {
-                display: none; /* ⬅️ Burger menu caché sur grand écran */
+                display: flex !important; /* Force l'affichage */
+            }
+            
+            /* Container normal sans décalage */
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
             }
         }
 
@@ -406,16 +425,19 @@
         }
 
         .table-container {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            overflow: hidden;
             box-shadow: 
                 0 10px 25px -5px rgba(15, 23, 42, 0.08),
                 0 10px 10px -5px rgba(15, 23, 42, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.3);
             max-height: 600px;
-            overflow-y: auto;
+            position: relative;
         }
 
         .table-container::-webkit-scrollbar {
@@ -435,9 +457,32 @@
             background: rgba(100, 116, 139, 0.7);
         }
 
+        /* Indicateur de scroll mobile */
+        .table-container::after {
+            content: '→ Swipe';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+        }
+
+        .table-container.show-scroll-hint::after {
+            opacity: 1;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         th {
@@ -454,6 +499,7 @@
             top: 0;
             z-index: 10;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
         }
 
         td {
@@ -463,6 +509,7 @@
             vertical-align: middle;
             font-weight: 500;
             color: #334155;
+            white-space: nowrap;
         }
 
         tr:hover td {
@@ -2086,6 +2133,162 @@
                 border-left-color: transparent;
             }
         }
+
+        /* ========================================
+        🎯 SYSTÈME DE VUES SÉPARÉES (SPA)
+        ======================================== */
+
+        .app-view {
+            display: none; /* Toutes les vues sont cachées par défaut */
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeInView 0.4s ease-out;
+            opacity: 0;
+        }
+
+        .app-view.active {
+            display: block; /* Seule la vue active est visible */
+            opacity: 1;
+        }
+
+        /* Animation d'entrée fluide */
+        @keyframes fadeInView {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Wrapper de la vue */
+        .view-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 80px; /* Espace pour le burger menu */
+        }
+
+        /* En-tête de chaque vue */
+        .view-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(100, 116, 139, 0.1);
+            animation: slideInFromTop 0.5s ease-out;
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Titre de la vue */
+        .view-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Sous-titre de la vue */
+        .view-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Mode sombre */
+        [data-theme="dark"] .view-title {
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .view-subtitle {
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .view-header {
+            border-bottom-color: rgba(148, 163, 184, 0.2);
+        }
+
+        /* Responsive pour vues */
+        @media (max-width: 768px) {
+            .view-wrapper {
+                padding-top: 60px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            
+            .view-title {
+                font-size: 1.5rem;
+            }
+            
+            .view-subtitle {
+                font-size: 0.95rem;
+            }
+            
+            .app-view {
+                padding: 15px 10px;
+            }
+        }
+
+        /* Animation de transition entre vues */
+        .view-transition-enter {
+            animation: viewEnter 0.3s ease-out forwards;
+        }
+
+        @keyframes viewEnter {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .view-transition-leave {
+            animation: viewLeave 0.2s ease-in forwards;
+        }
+
+        @keyframes viewLeave {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+        }
+
+        /* Style pour le contenu des vues */
+        .app-view .glass-card {
+            animation: cardSlideUp 0.5s ease-out 0.1s backwards;
+        }
+
+        @keyframes cardSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
     </style>
 </head>
 <body>
@@ -2093,12 +2296,8 @@
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
-                <span class="logo-icon">🌿</span>
                 <span class="logo-text">BEHAVANA</span>
             </div>
-            <button class="sidebar-close" onclick="toggleSidebar()">
-                <span>✕</span>
-            </button>
         </div>
         
         <nav class="sidebar-nav">
@@ -2112,15 +2311,10 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="dashboard-group">
-                    <a href="#stats-generales" class="nav-item" onclick="navigateTo('dashboard')" 
-                    data-tooltip="Voir les compteurs généraux">
+                    <a href="#" class="nav-item" onclick="navigateTo('dashboard'); return false;"> 
+                
                         <span class="nav-icon-sub">📈</span>
                         <span class="nav-text">Statistiques Générales</span>
-                    </a>
-                    <a href="#repartition-qualite" class="nav-item" onclick="navigateTo('quality-stats')" 
-                    data-tooltip="Répartition par qualité de vanille">
-                        <span class="nav-icon-sub">💎</span>
-                        <span class="nav-text">Répartition par Qualité</span>
                     </a>
                 </div>
             </div>
@@ -2135,23 +2329,19 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="employees-group">
-                    <a href="#add-employee" class="nav-item" onclick="navigateTo('add-employee')" 
-                    data-tooltip="Ajouter un nouvel employé">
+                    <a href="#" class="nav-item" onclick="navigateTo('add-employee'); return false;">
                         <span class="nav-icon-sub">➕</span>
                         <span class="nav-text">Ajouter Employé</span>
                     </a>
-                    <a href="#manage-employees" class="nav-item" onclick="navigateTo('manage-employees')" 
-                    data-tooltip="Gérer les employés existants">
+                    <a href="#" class="nav-item" onclick="navigateTo('manage-employees'); return false;">
                         <span class="nav-icon-sub">⚙️</span>
                         <span class="nav-text">Gestion Employés</span>
                     </a>
-                    <a href="#employee-stats" class="nav-item" onclick="navigateTo('employee-stats')" 
-                    data-tooltip="Statistiques détaillées par employé">
+                    <a href="#" class="nav-item" onclick="navigateTo('employee-stats'); return false;">
                         <span class="nav-icon-sub">📊</span>
                         <span class="nav-text">Stats par Employé</span>
                     </a>
-                    <a href="#employee-salary" class="nav-item" onclick="navigateTo('salary')" 
-                    data-tooltip="Détail des salaires par employé">
+                    <a href="#" class="nav-item" onclick="navigateTo('salary'); return false;">
                         <span class="nav-icon-sub">💵</span>
                         <span class="nav-text">Salaires Détaillés</span>
                     </a>
@@ -2168,18 +2358,15 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="weighing-group">
-                    <a href="#record-weighing" class="nav-item" onclick="navigateTo('weighing')" 
-                    data-tooltip="Enregistrer un nouveau pesage">
+                    <a href="#" class="nav-item" onclick="navigateTo('weighing'); return false;">
                         <span class="nav-icon-sub">📝</span>
                         <span class="nav-text">Enregistrement Pesage</span>
                     </a>
-                    <a href="#weighing-list" class="nav-item" onclick="navigateTo('weighing-list')" 
-                    data-tooltip="Voir tous les pesages">
+                    <a href="#" class="nav-item" onclick="navigateTo('weighing-list'); return false;">
                         <span class="nav-icon-sub">📋</span>
                         <span class="nav-text">Liste des Pesages</span>
                     </a>
-                    <a href="#daily-quality-stats" class="nav-item" onclick="navigateTo('daily-stats')" 
-                    data-tooltip="Stats quotidiennes par qualité">
+                    <a href="#" class="nav-item" onclick="navigateTo('daily-stats'); return false;">
                         <span class="nav-icon-sub">📅</span>
                         <span class="nav-text">Stats Quotidiennes</span>
                     </a>
@@ -2196,23 +2383,15 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="finance-group">
-                    <a href="#default-price" class="nav-item" onclick="navigateTo('settings')" 
-                    data-tooltip="Définir le prix par défaut">
+                    <a href="#" class="nav-item" onclick="navigateTo('settings'); return false;">
                         <span class="nav-icon-sub">💲</span>
                         <span class="nav-text">Prix par Défaut</span>
                     </a>
-                    <a href="#salary-calculation" class="nav-item" onclick="navigateTo('salary-calc')" 
-                    data-tooltip="Calculer les salaires">
-                        <span class="nav-icon-sub">🧮</span>
-                        <span class="nav-text">Calcul Salaires</span>
-                    </a>
-                    <a href="#salary-by-quality" class="nav-item" onclick="navigateTo('quality-stats')" 
-                    data-tooltip="Répartition des salaires par qualité">
+                    <a href="#" class="nav-item" onclick="navigateTo('salary-repartition'); return false;">
                         <span class="nav-icon-sub">💎</span>
                         <span class="nav-text">Répartition Salaires</span>
                     </a>
-                    <a href="#salary-details" class="nav-item" onclick="navigateTo('salary')" 
-                    data-tooltip="Détails des salaires">
+                    <a href="#" class="nav-item" onclick="navigateTo('salary-details'); return false;">
                         <span class="nav-icon-sub">📊</span>
                         <span class="nav-text">Détails Salaires</span>
                     </a>
@@ -2229,18 +2408,15 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="tools-group">
-                    <a href="#search" class="nav-item" onclick="navigateTo('search')" 
-                    data-tooltip="Rechercher et filtrer les données">
+                    <a href="#" class="nav-item" onclick="navigateTo('search'); return false;">
                         <span class="nav-icon-sub">🔍</span>
                         <span class="nav-text">Recherche & Filtrage</span>
                     </a>
-                    <a href="#import-export" class="nav-item" onclick="navigateTo('import-export')" 
-                    data-tooltip="Importer/Exporter les données">
+                    <a href="#" class="nav-item" onclick="navigateTo('import-export'); return false;">
                         <span class="nav-icon-sub">💾</span>
                         <span class="nav-text">Import/Export JSON</span>
                     </a>
-                    <a href="#database-check" class="nav-item" onclick="navigateTo('database-check')" 
-                    data-tooltip="Vérifier la base de données">
+                    <a href="#" class="nav-item" onclick="navigateTo('database-check'); return false;">
                         <span class="nav-icon-sub">🔍</span>
                         <span class="nav-text">Vérification BDD</span>
                     </a>
@@ -2268,456 +2444,750 @@
     <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <!--===========================================================================
     ============================================================================-->
-    <div class="container">
-        <div class="glass-card">
-            <div class="header">
-                <h1>🌿 Pesage Vanille BEHAVANA</h1>
-                <p>Système de suivi intelligent des poids et statistiques des employés</p>
-            </div>
+    <!-- ========================================
+     🎯 CONTENEUR PRINCIPAL DES VUES
+     ======================================== -->
+    <div class="app-container">
 
-            <div class="content">
-                <!-- Ajout d'un nouvel employé -->
-                <div class="form-section">
-                    <h2>👤 Ajouter un Nouvel Employé</h2>
-                    <div class="success-message" id="employeeSuccessMsg">Employé ajouté avec succès!</div>
-                    <div class="error-message" id="employeeErrorMsg">Une erreur s'est produite!</div>
-                    <div class="form-group">
-                        <input type="text" id="employeeName" placeholder="Nom de l'employé" required>
-                        <div id="duplicateWarning" class="duplicate-warning">
-                            ⚠️ Cet employé existe déjà!
-                        </div>
-                        <button class="btn" onclick="addEmployee()">Ajouter Employé</button>
-                    </div>
+        <!-- 📊 VUE 1 : DASHBOARD -->
+        <div id="view-dashboard" class="app-view active">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">📊 Dashboard</h1>
+                    <p class="view-subtitle">Vue d'ensemble des statistiques générales</p>
                 </div>
-
-                <!-- Gestion des employés -->
-                <div class="form-section">
-                    <h2>👥 Gestion des Employés</h2>
-                    <div style="display:flex; gap:8px; margin:8px 0;">
-                        <input id="employeeManageSearch" 
-                            type="text" 
-                            placeholder="🔍 Rechercher..." 
-                            oninput="filterManageEmployees()" 
-                            style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;">
-                        
-                        <button onclick="clearEmployeeManageSearch()" 
-                            style="padding:8px 12px; border-radius:6px; background:#f43f5e; color:white; border:none;">
-                            ✖️
-                        </button>
-                    </div>
-
-
-                    <div class="success-message" id="employeeManagementSuccessMsg">Opération réussie!</div>
-                    <div class="error-message" id="employeeManagementErrorMsg">Une erreur s'est produite!</div>
-                    <div class="table-container">
-                        <table id="employeesTable">
-                            <thead>
-                                <tr>
-                                    <th>👤 Nom Employé</th>
-                                    <th>📅 Date d'ajout</th>
-                                    <th>📊 Nombre de pesages</th>
-                                    <th>🛠️ Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="employeesTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ⭐ NOUVEAU: Prix par défaut pour anciennes données -->
-                <div class="form-section">
-                    <h2>💰 Prix par Défaut (pour anciennes données sans qualité)</h2>
-                    <div class="success-message" id="defaultPriceSuccessMsg">Prix par défaut mis à jour!</div>
-                    <div class="error-message" id="defaultPriceErrorMsg">Erreur!</div>
-                    
-                    <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2); margin-bottom: 20px;">
-                        <p style="color: #1e40af; font-weight: 600; margin-bottom: 16px;">
-                            ℹ️ Ce prix sera utilisé uniquement pour les pesages anciens qui n'ont pas de qualité définie.
-                        </p>
-                        <div class="form-group">
-                            <input type="text" id="defaultPricePerKg" placeholder="Prix par défaut (Ar)" onkeyup="formatDefaultPriceInput()" required>
-                            <button class="btn success" onclick="updateDefaultPrice()">💾 Enregistrer Prix par Défaut</button>
-                        </div>
-                        <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.8); border-radius: 8px;">
-                            <p style="color: #1e293b; font-weight: 600; font-size: 1.1rem; text-align: center;">
-                                Prix actuel: <span id="currentDefaultPrice" style="font-size: 1.3rem; font-weight: 800; color: #059669;">0 Ar</span> / kg
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Statistiques générales -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 id="totalEmployees">0</h3>
-                        <p>Total Employés</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="totalWeights">0</h3>
-                        <p>Total Pesages</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="todayWeights">0</h3>
-                        <p>Pesages Aujourd'hui</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="monthlyTotal">0 kg</h3>
-                        <p>Total du Mois</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="overallTotal">0 kg</h3>
-                        <p>Total Général</p>
-                    </div>
-                </div>
-
-                <!-- Statistiques des salaires -->
-                <div class="form-section">
-                    <h2>💵 Calcul des Salaires</h2>
-                    
-                    <!-- Totaux généraux -->
-                    <div class="stats-grid" style="margin-bottom: 24px;">
-                        <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));">
-                            <h3 id="totalSalary" style="background: linear-gradient(135deg, #059669, #047857); background-clip: text; -webkit-background-clip: text;
- -webkit-text-fill-color: transparent;">0 Ar</h3>
-                            <p>Total Salaires à Payer</p>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));">
-                            <h3 id="monthlySalary" style="background: linear-gradient(135deg, #3b82f6, #2563eb); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
-                            <p>Salaires du Mois</p>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));">
-                            <h3 id="todaySalary" style="background: linear-gradient(135deg, #f59e0b, #d97706); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
-                            <p>Salaires Aujourd'hui</p>
-                        </div>
-                    </div>
-                    
-                    <!-- ⭐ NOUVEAU: Répartition par Qualité -->
-                    <div style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 16px; border: 2px solid rgba(59, 130, 246, 0.1);">
-                        <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            💎 Répartition des Salaires par Qualité
-                        </h3>
-                        <div id="salaryByQualityGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
-                            <!-- Cartes générées dynamiquement -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Saisie du poids quotidien -->
-                <div class="form-section">
-                    <h2>⚖️ Enregistrement du Pesage</h2>
-                    <div class="success-message" id="weightSuccessMsg">Poids enregistré avec succès!</div>
-                    <div class="error-message" id="weightErrorMsg">Une erreur s'est produite!</div>
-                    <div class="form-group">
-                        <div class="employee-search-container" style="position: relative; z-index: 100;">
-                            <input type="text" id="employeeSearchInput" placeholder="Rechercher un employé ou taper son nom..." 
-                                autocomplete="off" onkeyup="searchEmployees()" onfocus="showEmployeeDropdown()" 
-                                style="width: 100%;">
-                            <div id="employeeDropdown" class="employee-dropdown" style="display: none;">
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>📈 Statistiques Générales</h2>
+                            
+                            <!-- Statistiques générales -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <h3 id="totalEmployees">0</h3>
+                                    <p>Total Employés</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="totalWeights">0</h3>
+                                    <p>Total Pesages</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="todayWeights">0</h3>
+                                    <p>Pesages Aujourd'hui</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="monthlyTotal">0 kg</h3>
+                                    <p>Total du Mois</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="overallTotal">0 kg</h3>
+                                    <p>Total Général</p>
+                                </div>
                             </div>
-                            <input type="hidden" id="selectedEmployeeId" value="">
                         </div>
-                        <input type="number" id="weight" placeholder="Poids (kg)" step="0.1" min="0" required>
-                        <input type="date" id="weighingDate" required>
-                        <input type="text" id="qualityName" placeholder="💎 Nom de la qualité (ex: Premium, Standard...)" required>
-                        <input type="text" id="qualityPrice" placeholder="💰 Prix par kg (Ar)" onkeyup="formatQualityPriceInputField()" required>
-                        <button class="btn" onclick="addWeight()" style="grid-column: 1 / -1;">Enregistrer Pesage</button>
-                        <button class="btn secondary" onclick="fillLastEntry()" style="grid-column: 1 / -1;">
-                            🔄 Reprendre dernière saisie (qualité + prix)
-                        </button>
-
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- ⭐ NOUVEAU: Statistiques Quotidiennes par Qualité -->
-                <!-- ⭐ NOUVEAU: Statistiques Quotidiennes par Qualité AMÉLIORÉES -->
-                <div class="form-section">
-                    <h2>📅 Statistiques Quotidiennes par Qualité</h2>
-
-                    <!-- ⭐ RECHERCHE INTELLIGENTE EMPLOYÉ -->
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
-                            🔍 Rechercher un Employé
-                        </label>
-                        <div style="position: relative; z-index: 100;">
-                            <input type="text" 
-                                id="dailyStatsEmployeeSearch" 
-                                placeholder="Tapez le nom de l'employé..." 
-                                autocomplete="off"
-                                onkeyup="filterDailyStatsByEmployee()"
-                                onfocus="showDailyStatsEmployeeDropdown()"
-                                style="width: 100%; padding: 16px 20px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 16px; font-size: 1rem; font-weight: 500; background: rgba(255, 255, 255, 0.9);">
-                            <div id="dailyStatsEmployeeDropdown" class="employee-dropdown" style="display: none; max-width: 100%;"></div>
-                            <input type="hidden" id="selectedDailyStatsEmployeeId" value="">
+        <!-- 👤 VUE 2 : AJOUT EMPLOYÉ -->
+        <div id="view-add-employee" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">👤 Ajouter un Employé</h1>
+                    <p class="view-subtitle">Enregistrer un nouvel employé dans le système</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>👤 Nouvel Employé</h2>
+                            <div class="success-message" id="employeeSuccessMsg">Employé ajouté avec succès!</div>
+                            <div class="error-message" id="employeeErrorMsg">Une erreur s'est produite!</div>
+                            <div class="form-group">
+                                <input type="text" id="employeeName" placeholder="Nom de l'employé" required>
+                                <div id="duplicateWarning" class="duplicate-warning">
+                                    ⚠️ Cet employé existe déjà !
+                                </div>
+                                <button class="btn" onclick="addEmployee()">Ajouter Employé</button>
+                            </div>
                         </div>
-                        <div id="selectedEmployeeInfo" style="display: none; margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #1e40af; font-weight: 600;">
-                                    👤 Filtré par: <strong id="selectedEmployeeNameDisplay"></strong>
-                                </span>
-                                <button onclick="clearDailyStatsEmployeeFilter()" 
-                                        style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">
-                                    ✕ Effacer
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚙️ VUE 3 : GESTION EMPLOYÉS -->
+        <div id="view-manage-employees" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">⚙️ Gestion des Employés</h1>
+                    <p class="view-subtitle">Modifier et gérer les employés existants</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>👥 Gestion des Employés</h2>
+                            <div style="display:flex; gap:8px; margin:8px 0;">
+                                <input id="employeeManageSearch" 
+                                    type="text" 
+                                    placeholder="🔍 Rechercher..." 
+                                    oninput="filterManageEmployees()" 
+                                    style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                                
+                                <button onclick="clearEmployeeManageSearch()" 
+                                    style="padding:8px 12px; border-radius:6px; background:#f43f5e; color:white; border:none;">
+                                    ✖️
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- NOUVEAU: Filtres personnalisables -->
-                    <div class="filter-inputs">
-                        <div>
-                            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
-                                ⬇️ Poids Minimum (kg)
-                            </label>
-                            <input type="number" id="minWeightFilter" placeholder="Ex: 3" step="0.1" min="0">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
-                                ⬆️ Poids Maximum (kg)
-                            </label>
-                            <input type="number" id="maxWeightFilter" placeholder="Ex: 10" step="0.1" min="0">
-                        </div>
-                    </div>
 
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <input type="date" id="dailyStatsDate" required>
-                        <button class="btn" onclick="updateDailyQualityStats()">🔍 Afficher Statistiques du Jour</button>
-                        <button class="btn secondary" onclick="showTodayStats()">📆 Aujourd'hui</button>
-                    </div>
-                    
-                    <div id="dailyQualityStatsContainer" style="display: none;">
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 16px; border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2); margin-bottom: 20px;">
-                            <h3 style="color: #1e40af; margin-bottom: 12px; font-size: 1.1rem;">
-                                📅 Date: <span id="selectedDateDisplay"></span>
-                            </h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
-                                <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
-                                    <div style="font-size: 1.5rem; font-weight: 800; color: #059669;" id="dailyTotalKg">0 kg</div>
-                                    <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Poids Total</div>
-                                </div>
-                                <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
-                                    <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;" id="dailyTotalSalary">0 Ar</div>
-                                    <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Salaire Total</div>
-                                </div>
-                                <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
-                                    <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;" id="dailyTotalPesages">0</div>
-                                    <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Pesages</div>
-                                </div>
-                                <div style="text-align: center; padding: 12px; background: white; border-radius: 8px; border: 2px solid rgba(220, 38, 38, 0.2);">
-                                    <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626;" id="dailyMinWeight">0 kg</div>
-                                    <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">⬇️ Poids Min</div>
-                                </div>
-                                <div style="text-align: center; padding: 12px; background: white; border-radius: 8px; border: 2px solid rgba(22, 163, 74, 0.2);">
-                                    <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;" id="dailyMaxWeight">0 kg</div>
-                                    <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">⬆️ Poids Max</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- NOUVEAU: Listes des poids hors limites -->
-                        <div id="outOfRangeLists" style="display: none;" class="out-of-range-list">
-                            <div id="overLimitList" style="display: none; margin-bottom: 20px;">
-                                <h3 style="color: #dc2626; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                                    ⚠️ Poids SUPÉRIEURS à <span id="displayMaxLimit">0</span> kg
-                                </h3>
-                                <div id="overLimitItems"></div>
-                            </div>
-                            
-                            <div id="underLimitList" style="display: none;">
-                                <h3 style="color: #16a34a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                                    ℹ️ Poids INFÉRIEURS à <span id="displayMinLimit">0</span> kg
-                                </h3>
-                                <div id="underLimitItems"></div>
-                            </div>
-                        </div>
-                        
-                        <div id="dailyQualityBreakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                            <!-- Cartes générées dynamiquement -->
-                        </div>
-                        
-                        <!-- Tableau détaillé -->
-                        <div style="margin-top: 24px;">
-                            <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem;">📋 Détail des Pesages</h3>
+                            <div class="success-message" id="employeeManagementSuccessMsg">Opération réussie!</div>
+                            <div class="error-message" id="employeeManagementErrorMsg">Une erreur s'est produite!</div>
                             <div class="table-container">
-                                <table>
+                                <table id="employeesTable">
                                     <thead>
                                         <tr>
-                                            <th>👤 Employé</th>
-                                            <th>💎 Qualité</th>
-                                            <th>⚖️ Poids (kg)</th>
-                                            <th>💰 Prix/kg (Ar)</th>
-                                            <th>💵 Salaire (Ar)</th>
+                                            <th>👤 Nom Employé</th>
+                                            <th>📅 Date d'ajout</th>
+                                            <th>📊 Nombre de pesages</th>
+                                            <th>🛠️ Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="dailyQualityTableBody">
+                                    <tbody id="employeesTableBody">
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="noDailyData" style="display: none; text-align: center; padding: 40px; color: #94a3b8;">
-                        <div style="font-size: 3rem; margin-bottom: 16px;">📭</div>
-                        <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 8px;">Aucun pesage pour cette date</div>
-                        <div style="font-size: 0.95rem;">Sélectionnez une autre date ou enregistrez des pesages</div>
-                    </div>
                 </div>
-
-                <!-- Recherche et filtrage -->
-                <div class="form-section">
-                    <h2>🔍 Recherche et Filtrage Avancé</h2>
-                    <div class="filter-section">
-                        <div class="employee-search-container" style="position: relative; z-index: 50;">
-                            <input type="text" id="nameFilter" placeholder="Rechercher par nom d'employé..." 
-                                autocomplete="off" onkeyup="filterEmployeeSearch()" onfocus="showFilterEmployeeDropdown()" 
-                                style="width: 100%; max-width: 400px;">
-                            <div id="filterEmployeeDropdown" class="employee-dropdown" style="display: none; max-width: 400px;">
-                            </div>
-                            <input type="hidden" id="selectedFilterEmployeeId" value="">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <select id="monthFilter" onchange="filterByMonth()">
-                            <option value="">Filtrer par mois</option>
-                            <option value="01">Janvier</option>
-                            <option value="02">Février</option>
-                            <option value="03">Mars</option>
-                            <option value="04">Avril</option>
-                            <option value="05">Mai</option>
-                            <option value="06">Juin</option>
-                            <option value="07">Juillet</option>
-                            <option value="08">Août</option>
-                            <option value="09">Septembre</option>
-                            <option value="10">Octobre</option>
-                            <option value="11">Novembre</option>
-                            <option value="12">Décembre</option>
-                        </select>
-                        <input type="date" id="dateFilter" placeholder="Filtrer par date" onchange="filterByDate()">
-                        <button class="btn secondary" onclick="clearFilters()">🔄 Effacer Filtres</button>
-                    </div>
-                    
-                    <!-- NOUVEAU: Résumé quotidien avec total correct -->
-                    <div id="dailySummary" class="daily-summary" style="display: none;">
-                        <h3>📊 Résumé pour la date sélectionnée</h3>
-                        <div class="daily-total" id="dailyTotal">
-                            0 kg
-                        </div>
-                        <p style="text-align: center; margin-top: 12px; color: #64748b;">
-                            Total des pesages: <span id="dailyCount">0</span> pesage(s)
-                        </p>
-                    </div>
-                    <!-- NOUVEAU: Statistiques des résultats de recherche -->
-                    <div id="searchStats" class="daily-summary" style="display: none;">
-                        <h3>📊 Statistiques des Résultats de Recherche</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                            <div style="text-align: center; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2);">
-                                <div style="font-size: 1.5rem; font-weight: 800; color: #1e40af;" id="searchTotalWeight">0 kg</div>
-                                <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Poids Total</div>
-                            </div>
-                            <div style="text-align: center; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 2px solid rgba(16, 185, 129, 0.2);">
-                                <div style="font-size: 1.5rem; font-weight: 800; color: #047857;" id="searchAverage">0 kg</div>
-                                <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Moyenne</div>
-                            </div>
-                            <div style="text-align: center; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.2);">
-                                <div style="font-size: 1.5rem; font-weight: 800; color: #d97706;" id="searchCount">0</div>
-                                <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Nombre de Pesages</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <button class="btn secondary" onclick="exportData()">📊 Exporter CSV</button>
-                        <button class="btn danger" onclick="clearAllData()">🗑️ Réinitialiser</button>
-                    </div>
-                </div>
-
-                <!-- Import/Export JSON Section -->
-                <div class="form-section">
-                    <h2>💾 Importation et Exportation JSON</h2>
-                    <div class="success-message" id="importSuccessMsg">Données importées avec succès!</div>
-                    <div class="error-message" id="importErrorMsg">Erreur lors de l'importation!</div>
-                    <!-- ⭐ NOUVEAU: Bouton DEBUG -->
-                    <div style="margin-bottom: 20px; padding: 16px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.2);">
-                        <h3 style="color: #d97706; margin-bottom: 12px; font-size: 1.1rem;">🔍 Vérification Base de Données</h3>
-                        <button class="btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" onclick="debugDatabase()">
-                            🔍 Afficher contenu BDD dans Console
-                        </button>
-                        <p style="color: #92400e; margin-top: 8px; font-size: 0.9rem;">
-                            Appuyez sur F12 → Console pour voir les résultats
-                        </p>
-                    </div>
-                    
-                    <div class="import-export-section">
-                    <div class="import-export-section">
-                        <div class="file-input-wrapper">
-                            <input type="file" id="jsonFileInput" accept=".json" onchange="importJSON()">
-                            <label for="jsonFileInput" class="file-input-label">📥 Importer JSON</label>
-                        </div>
-                        <button class="btn success" onclick="exportJSON()">📤 Exporter JSON</button>
-                        <button class="btn danger" onclick="resetAllData()">🔄 Remise à Zéro</button>
-                    </div>
-                </div>
-
-                <!-- Liste des pesages -->
-                <div class="form-section">
-                    <h2>📊 Liste des Pesages</h2>
-                    <div class="table-container">
-                        <table id="weightsTable">
-                            <thead>
-                                <tr>
-                                    <th>📅 Date</th>
-                                    <th>👤 Nom Employé</th>
-                                    <th>⚖️ Poids (kg)</th>
-                                    <th>💎 Qualité</th>
-                                    <th>🛠️ Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="weightsTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Statistiques par employé -->
-                <div class="form-section">
-                    <h2>📈 Statistiques Détaillées par Employé</h2>
-                    <input type="text" id="employeeStatsSearch" 
-                        placeholder="🔍 Rechercher un employé..."
-                        onkeyup="filterEmployeeStats()" 
-                        style="padding:14px 20px; width:100%; max-width:400px; 
-                                border:2px solid rgba(203,213,225,0.8);
-                                border-radius:12px; margin-bottom:20px; 
-                                font-size:1rem; font-weight:500;">
-                    
-                    <div id="employeeStats"
-                        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-                                gap:24px; max-height:500px; overflow-y:auto; padding:10px;">
-                    </div>
-                </div>
-
-
-                <!-- Tableau détaillé des salaires par employé -->
-                <div class="form-section">
-                    <h2>💼 Détail des Salaires par Employé</h2>
-                    <div class="table-container">
-                        <table id="salaryTable">
-                            <thead>
-                                <tr>
-                                    <th>👤 Nom Employé</th>
-                                    <th>⚖️ Poids Total (kg)</th>
-                                    <th>📊 Nombre Pesages</th>
-                                    <th>💰 Salaire Total (Ar)</th>
-                                    <th>📅 Salaire du Mois (Ar)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="salaryTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            
             </div>
         </div>
-    </div>
+
+        <!-- 📊 VUE 4 : STATS EMPLOYÉS -->
+        <div id="view-employee-stats" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">📊 Statistiques par Employé</h1>
+                    <p class="view-subtitle">Détails des performances individuelles</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>📈 Statistiques Détaillées par Employé</h2>
+                            <input type="text" id="employeeStatsSearch" 
+                                placeholder="🔍 Rechercher un employé..."
+                                onkeyup="filterEmployeeStats()" 
+                                style="padding:14px 20px; width:100%; max-width:400px; 
+                                        border:2px solid rgba(203,213,225,0.8);
+                                        border-radius:12px; margin-bottom:20px; 
+                                        font-size:1rem; font-weight:500;">
+                            
+                            <div id="employeeStats"
+                                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+                                        gap:24px; max-height:500px; overflow-y:auto; padding:10px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💵 VUE 5 : SALAIRES DÉTAILLÉS -->
+        <div id="view-salary" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💵 Détails des Salaires</h1>
+                    <p class="view-subtitle">Vue complète des salaires par employé</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>💼 Détail des Salaires par Employé</h2>
+                            <div class="table-container">
+                                <table id="salaryTable">
+                                    <thead>
+                                        <tr>
+                                            <th>👤 Nom Employé</th>
+                                            <th>⚖️ Poids Total (kg)</th>
+                                            <th>📊 Nombre Pesages</th>
+                                            <th>💰 Salaire Total (Ar)</th>
+                                            <th>📅 Salaire du Mois (Ar)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salaryTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚖️ VUE 6 : ENREGISTREMENT PESAGE -->
+        <div id="view-weighing" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">⚖️ Enregistrement du Pesage</h1>
+                    <p class="view-subtitle">Saisir un nouveau pesage</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>⚖️ Nouveau Pesage</h2>
+                            <div class="success-message" id="weightSuccessMsg">Poids enregistré avec succès!</div>
+                            <div class="error-message" id="weightErrorMsg">Une erreur s'est produite!</div>
+                            <div class="form-group">
+                                <div class="employee-search-container" style="position: relative; z-index: 100;">
+                                    <input type="text" id="employeeSearchInput" placeholder="Rechercher un employé..." 
+                                        autocomplete="off" onkeyup="searchEmployees()" onfocus="showEmployeeDropdown()" 
+                                        style="width: 100%;">
+                                    <div id="employeeDropdown" class="employee-dropdown" style="display: none;"></div>
+                                    <input type="hidden" id="selectedEmployeeId" value="">
+                                </div>
+                                <input type="number" id="weight" placeholder="Poids (kg)" step="0.1" min="0" required>
+                                <input type="date" id="weighingDate" required>
+                                <input type="text" id="qualityName" placeholder="💎 Qualité (ex: Premium)" required>
+                                <input type="text" id="qualityPrice" placeholder="💰 Prix/kg (Ar)" onkeyup="formatQualityPriceInputField()" required>
+                                <button class="btn" onclick="addWeight()" style="grid-column: 1 / -1;">Enregistrer Pesage</button>
+                                <button class="btn secondary" onclick="fillLastEntry()" style="grid-column: 1 / -1;">
+                                    🔄 Reprendre dernière saisie
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📋 VUE 7 : LISTE PESAGES -->
+        <div id="view-weighing-list" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">📋 Liste des Pesages</h1>
+                    <p class="view-subtitle">Historique complet des pesages</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>📊 Tous les Pesages</h2>
+                            <div class="table-container">
+                                <table id="weightsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>📅 Date</th>
+                                            <th>👤 Employé</th>
+                                            <th>⚖️ Poids (kg)</th>
+                                            <th>💎 Qualité</th>
+                                            <th>🛠️ Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="weightsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📅 VUE 8 : STATS QUOTIDIENNES -->
+        <div id="view-daily-stats" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">📅 Statistiques Quotidiennes</h1>
+                    <p class="view-subtitle">Analyse détaillée par date et qualité</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>📅 Statistiques par Jour</h2>
+
+                            <!-- RECHERCHE EMPLOYÉ -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                                    🔍 Rechercher un Employé
+                                </label>
+                                <div style="position: relative; z-index: 100;">
+                                    <input type="text" 
+                                        id="dailyStatsEmployeeSearch" 
+                                        placeholder="Tapez le nom de l'employé..." 
+                                        autocomplete="off"
+                                        onkeyup="filterDailyStatsByEmployee()"
+                                        onfocus="showDailyStatsEmployeeDropdown()"
+                                        style="width: 100%; padding: 16px 20px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 16px; font-size: 1rem; font-weight: 500; background: rgba(255, 255, 255, 0.9);">
+                                    <div id="dailyStatsEmployeeDropdown" class="employee-dropdown" style="display: none; max-width: 100%;"></div>
+                                    <input type="hidden" id="selectedDailyStatsEmployeeId" value="">
+                                </div>
+                                <div id="selectedEmployeeInfo" style="display: none; margin-top: 12px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: #1e40af; font-weight: 600;">
+                                            👤 Filtré par: <strong id="selectedEmployeeNameDisplay"></strong>
+                                        </span>
+                                        <button onclick="clearDailyStatsEmployeeFilter()" 
+                                                style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem;">
+                                            ✕ Effacer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- FILTRES POIDS -->
+                            <div class="filter-inputs">
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                                        ⬇️ Poids Minimum (kg)
+                                    </label>
+                                    <input type="number" id="minWeightFilter" placeholder="Ex: 3" step="0.1" min="0">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; color: #64748b; font-weight: 600; font-size: 0.9rem;">
+                                        ⬆️ Poids Maximum (kg)
+                                    </label>
+                                    <input type="number" id="maxWeightFilter" placeholder="Ex: 10" step="0.1" min="0">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <input type="date" id="dailyStatsDate" required>
+                                <button class="btn" onclick="updateDailyQualityStats()">🔍 Afficher Stats</button>
+                                <button class="btn secondary" onclick="showTodayStats()">📆 Aujourd'hui</button>
+                            </div>
+                            
+                            <!-- RÉSULTATS -->
+                            <div id="dailyQualityStatsContainer" style="display: none;">
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 16px; border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2); margin-bottom: 20px;">
+                                    <h3 style="color: #1e40af; margin-bottom: 12px; font-size: 1.1rem;">
+                                        📅 Date: <span id="selectedDateDisplay"></span>
+                                    </h3>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                                        <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #059669;" id="dailyTotalKg">0 kg</div>
+                                            <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Poids Total</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;" id="dailyTotalSalary">0 Ar</div>
+                                            <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Salaire Total</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 12px; background: white; border-radius: 8px;">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b;" id="dailyTotalPesages">0</div>
+                                            <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Pesages</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 12px; background: white; border-radius: 8px; border: 2px solid rgba(220, 38, 38, 0.2);">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626;" id="dailyMinWeight">0 kg</div>
+                                            <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">⬇️ Min</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 12px; background: white; border-radius: 8px; border: 2px solid rgba(22, 163, 74, 0.2);">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;" id="dailyMaxWeight">0 kg</div>
+                                            <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">⬆️ Max</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="outOfRangeLists" style="display: none;" class="out-of-range-list"></div>
+                                
+                                <div id="dailyQualityBreakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
+                                
+                                <div style="margin-top: 24px;">
+                                    <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem;">📋 Détail des Pesages</h3>
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>👤 Employé</th>
+                                                    <th>💎 Qualité</th>
+                                                    <th>⚖️ Poids (kg)</th>
+                                                    <th>💰 Prix/kg (Ar)</th>
+                                                    <th>💵 Salaire (Ar)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dailyQualityTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="noDailyData" style="display: none; text-align: center; padding: 40px; color: #94a3b8;">
+                                <div style="font-size: 3rem; margin-bottom: 16px;">🔭</div>
+                                <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 8px;">Aucun pesage pour cette date</div>
+                                <div style="font-size: 0.95rem;">Sélectionnez une autre date</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💲 VUE 9 : PRIX PAR DÉFAUT -->
+        <div id="view-settings" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💲 Paramètres Prix</h1>
+                    <p class="view-subtitle">Définir le prix par défaut</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>💰 Prix par Défaut</h2>
+                            <div class="success-message" id="defaultPriceSuccessMsg">Prix mis à jour!</div>
+                            <div class="error-message" id="defaultPriceErrorMsg">Erreur!</div>
+                            
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2); margin-bottom: 20px;">
+                                <p style="color: #1e40af; font-weight: 600; margin-bottom: 16px;">
+                                    ℹ️ Ce prix sera utilisé pour les pesages anciens sans qualité
+                                </p>
+                                <div class="form-group">
+                                    <input type="text" id="defaultPricePerKg" placeholder="Prix par défaut (Ar)" onkeyup="formatDefaultPriceInput()" required>
+                                    <button class="btn success" onclick="updateDefaultPrice()">💾 Enregistrer</button>
+                                </div>
+                                <div style="margin-top: 16px; padding: 16px; background: rgba(255, 255, 255, 0.8); border-radius: 8px;">
+                                    <p style="color: #1e293b; font-weight: 600; font-size: 1.1rem; text-align: center;">
+                                        Prix actuel: <span id="currentDefaultPrice" style="font-size: 1.3rem; font-weight: 800; color: #059669;">0 Ar</span> / kg
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔍 VUE 10 : RECHERCHE -->
+        <div id="view-search" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">🔍 Recherche et Filtrage</h1>
+                    <p class="view-subtitle">Filtrer les données par critères</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>🔍 Filtres Avancés</h2>
+                            
+                            <div class="filter-section">
+                                <div class="employee-search-container" style="position: relative; z-index: 50;">
+                                    <input type="text" id="nameFilter" placeholder="Rechercher par nom d'employé..." 
+                                        autocomplete="off" onkeyup="filterEmployeeSearch()" onfocus="showFilterEmployeeDropdown()" 
+                                        style="width: 100%; max-width: 400px;">
+                                    <div id="filterEmployeeDropdown" class="employee-dropdown" style="display: none; max-width: 400px;"></div>
+                                    <input type="hidden" id="selectedFilterEmployeeId" value="">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <select id="monthFilter" onchange="filterByMonth()">
+                                    <option value="">Filtrer par mois</option>
+                                    <option value="01">Janvier</option>
+                                    <option value="02">Février</option>
+                                    <option value="03">Mars</option>
+                                    <option value="04">Avril</option>
+                                    <option value="05">Mai</option>
+                                    <option value="06">Juin</option>
+                                    <option value="07">Juillet</option>
+                                    <option value="08">Août</option>
+                                    <option value="09">Septembre</option>
+                                    <option value="10">Octobre</option>
+                                    <option value="11">Novembre</option>
+                                    <option value="12">Décembre</option>
+                                </select>
+                                <input type="date" id="dateFilter" placeholder="Filtrer par date" onchange="filterByDate()">
+                                <button class="btn secondary" onclick="clearFilters()">🔄 Effacer Filtres</button>
+                            </div>
+                            
+                            <!-- Résumé quotidien -->
+                            <div id="dailySummary" class="daily-summary" style="display: none;">
+                                <h3>📊 Résumé pour la date sélectionnée</h3>
+                                <div class="daily-total" id="dailyTotal">0 kg</div>
+                                <p style="text-align: center; margin-top: 12px; color: #64748b;">
+                                    Total: <span id="dailyCount">0</span> pesage(s)
+                                </p>
+                            </div>
+                            
+                            <!-- Stats recherche -->
+                            <div id="searchStats" class="daily-summary" style="display: none;">
+                                <h3>📊 Statistiques des Résultats</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                                    <div style="text-align: center; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.2);">
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: #1e40af;" id="searchTotalWeight">0 kg</div>
+                                        <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Poids Total</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 2px solid rgba(16, 185, 129, 0.2);">
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: #047857;" id="searchAverage">0 kg</div>
+                                        <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Moyenne</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.2);">
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: #d97706;" id="searchCount">0</div>
+                                        <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Pesages</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button class="btn secondary" onclick="exportData()">📊 Exporter CSV</button>
+                                <button class="btn danger" onclick="clearAllData()">🗑️ Réinitialiser</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💾 VUE 11 : IMPORT/EXPORT -->
+        <div id="view-import-export" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💾 Import/Export Données</h1>
+                    <p class="view-subtitle">Sauvegarder et restaurer les données</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>💾 Importation et Exportation JSON</h2>
+                            <div class="success-message" id="importSuccessMsg">Données importées avec succès!</div>
+                            <div class="error-message" id="importErrorMsg">Erreur lors de l'importation!</div>
+                            
+                            <div class="import-export-section">
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="jsonFileInput" accept=".json" onchange="importJSON()">
+                                    <label for="jsonFileInput" class="file-input-label">📥 Importer JSON</label>
+                                </div>
+                                <button class="btn success" onclick="exportJSON()">📤 Exporter JSON</button>
+                                <button class="btn danger" onclick="resetAllData()">🔄 Remise à Zéro</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔍 VUE 12 : VÉRIFICATION BDD -->
+        <div id="view-database-check" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">🔍 Vérification Base de Données</h1>
+                    <p class="view-subtitle">Debug et diagnostic</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>🔍 Vérification BDD</h2>
+                            
+                            <div style="margin-bottom: 20px; padding: 16px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.2);">
+                                <h3 style="color: #d97706; margin-bottom: 12px; font-size: 1.1rem;">🔍 Diagnostic</h3>
+                                <button class="btn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" onclick="debugDatabase()">
+                                    🔍 Afficher contenu BDD dans Console
+                                </button>
+                                <p style="color: #92400e; margin-top: 8px; font-size: 0.9rem;">
+                                    Appuyez sur F12 → Console pour voir les résultats
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 💰 VUE 13 : RÉPARTITION SALAIRES (Finances) -->
+        <div id="view-salary-repartition" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💰 Répartition des Salaires</h1>
+                    <p class="view-subtitle">Distribution des salaires par qualité de vanille</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>💎 Répartition par Qualité de Vanille</h2>
+                            
+                            <!-- Totaux généraux -->
+                            <div class="stats-grid" style="margin-bottom: 24px;">
+                                <div class="stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));">
+                                    <h3 id="totalSalaryRepartition" style="background: linear-gradient(135deg, #059669, #047857); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                                    <p>Total Salaires Bruts</p>
+                                </div>
+                                <div class="stat-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));">
+                                    <h3 id="monthlySalaryRepartition" style="background: linear-gradient(135deg, #3b82f6, #2563eb); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                                    <p>Salaires du Mois</p>
+                                </div>
+                                <div class="stat-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));">
+                                    <h3 id="todaySalaryRepartition" style="background: linear-gradient(135deg, #f59e0b, #d97706); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0 Ar</h3>
+                                    <p>Salaires Aujourd'hui</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Répartition détaillée par Qualité -->
+                            <div style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 16px; border: 2px solid rgba(59, 130, 246, 0.1);">
+                                <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                    💎 Détail de la Répartition par Qualité
+                                </h3>
+                                <div id="salaryRepartitionGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+                                    <!-- Les cartes seront générées dynamiquement par JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💵 VUE 14 : DÉTAILS SALAIRES (Finances) -->
+        <div id="view-salary-details" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💵 Détails des Salaires</h1>
+                    <p class="view-subtitle">Analyse complète des salaires avec filtres avancés</p>
+                </div>
+                
+                <div class="glass-card">
+                    <div class="content">
+                        <!-- ================================================
+                            VERSION CORRIGÉE V2 - TOUS LES PROBLÈMES RÉSOLUS
+                            - Tous les titres de colonnes présents
+                            - Labels visibles en dark mode
+                            ================================================ -->
+
+                        <div class="form-section salary-details-section">
+                            <h2>💼 Tableau Complet des Salaires</h2>
+
+                            <!-- FILTRES AVANCÉS -->
+                            <div class="filters-container">
+                                <h3 class="filters-title">
+                                    🔍 Filtres Avancés
+                                </h3>
+                                <div class="filters-grid">
+                                    <div>
+                                        <label class="filter-label">🔎 Rechercher Employé</label>
+                                        <input type="text" 
+                                            id="salaryDetailsSearch" 
+                                            placeholder="Nom de l'employé..." 
+                                            oninput="filterSalaryDetails()" 
+                                            class="filter-input">
+                                    </div>
+                                    <div>
+                                        <label class="filter-label">📅 Période</label>
+                                        <select id="salaryDetailsPeriod" 
+                                                onchange="filterSalaryDetails()" 
+                                                class="filter-input">
+                                            <option value="all">Toute la période</option>
+                                            <option value="today">Aujourd'hui</option>
+                                            <option value="week">Cette semaine</option>
+                                            <option value="month" selected>Ce mois</option>
+                                            <option value="year">Cette année</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="filter-label">📊 Trier par</label>
+                                        <select id="salaryDetailsSort" 
+                                                onchange="filterSalaryDetails()" 
+                                                class="filter-input">
+                                            <option value="salary-desc" selected>Salaire (décroissant)</option>
+                                            <option value="salary-asc">Salaire (croissant)</option>
+                                            <option value="weight-desc">Poids (décroissant)</option>
+                                            <option value="weight-asc">Poids (croissant)</option>
+                                            <option value="name-asc">Nom (A-Z)</option>
+                                            <option value="name-desc">Nom (Z-A)</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-button-container">
+                                        <button onclick="clearSalaryDetailsFilters()" class="btn secondary btn-reset">
+                                            🔄 Réinitialiser
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RÉSUMÉ GLOBAL -->
+                            <div class="summary-container">
+                                <h3 class="summary-title">
+                                    📊 Résumé de la Sélection
+                                </h3>
+                                <div class="stats-grid-summary">
+                                    <div class="stat-card-mini">
+                                        <div class="stat-value-mini green" id="detailsTotalSalaryFiltered">0 Ar</div>
+                                        <div class="stat-label-mini">Total Salaires</div>
+                                    </div>
+                                    <div class="stat-card-mini">
+                                        <div class="stat-value-mini blue" id="detailsTotalWeightFiltered">0 kg</div>
+                                        <div class="stat-label-mini">Poids Total</div>
+                                    </div>
+                                    <div class="stat-card-mini">
+                                        <div class="stat-value-mini orange" id="detailsAvgSalaryFiltered">0 Ar</div>
+                                        <div class="stat-label-mini">Salaire Moyen</div>
+                                    </div>
+                                    <div class="stat-card-mini">
+                                        <div class="stat-value-mini purple" id="detailsEmployeeCountFiltered">0</div>
+                                        <div class="stat-label-mini">Employés</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Message d'aide mobile -->
+                            <div class="mobile-only" style="background: rgba(59, 130, 246, 0.1); 
+                                                            padding: 12px 16px; 
+                                                            border-radius: 12px; 
+                                                            margin-bottom: 16px; 
+                                                            text-align: center;
+                                                            font-size: 0.9rem;
+                                                            color: #1e40af;
+                                                            border: 2px solid rgba(59, 130, 246, 0.2);
+                                                            font-weight: 600;">
+                                📊 <strong>Tableau complet :</strong> Glissez horizontalement pour voir les 8 colonnes →
+                            </div>
+
+                            <!-- TABLEAU OPTIMISÉ - TOUS LES TITRES PRÉSENTS -->
+                            <div class="table-container salary-table-optimized">
+                                <table id="salaryDetailsTableComplete">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-name">👤 NOM EMPLOYÉ</th>
+                                            <th class="col-weight">⚖️ POIDS (KG)</th>
+                                            <th class="col-count">📊 NOMBRE PESAGES</th>
+                                            <th class="col-avg">📈 MOYENNE/PESAGE</th>
+                                            <th class="col-total">💰 SALAIRE TOTAL (AR)</th>
+                                            <th class="col-period">📅 PÉRIODE (AR)</th>
+                                            <th class="col-paid">💵 PAYÉ (AR)</th>
+                                            <th class="col-remaining">⚠️ RESTE (AR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="salaryDetailsTableBodyComplete">
+                                        <tr>
+                                            <td colspan="8" class="loading-message">⏳ Chargement des données...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- BOUTONS D'EXPORT -->
+                            <div class="export-buttons">
+                                <button onclick="exportSalaryDetailsCSV()" class="btn success btn-export">
+                                    📊 Exporter CSV
+                                </button>
+                                <button onclick="printSalaryDetails()" class="btn secondary btn-export">
+                                    🖨️ Imprimer
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div> <!-- ✅ FIN app-container -->
+
 
     <!-- Modal pour modifier un employé -->
     <div id="editEmployeeModal" class="modal">
@@ -2757,10 +3227,33 @@
                 </div>
             </div>
 
+            <!-- Dans la modale de paiement -->
             <div class="modal-input-group">
-                <label for="paymentAmount">💵 Montant à Payer (Ar)</label>
-                <input type="number" id="paymentAmount" placeholder="Entrez le montant" min="0" step="100">
+                <label for="paymentAmount">💰 Montant à Payer (Ar)</label>
+                
+                <!-- ✅ NOUVEAU : Indicateur visuel du reste -->
+                <div style="background: rgba(5, 150, 105, 0.1); 
+                            padding: 8px 12px; 
+                            border-radius: 8px; 
+                            margin-bottom: 8px; 
+                            text-align: center;
+                            border: 2px solid rgba(5, 150, 105, 0.2);">
+                    <span style="font-size: 0.85rem; color: #059669; font-weight: 600;">
+                        💡 Reste à payer : 
+                        <span id="paymentRemaining2" style="font-size: 1rem; font-weight: 800;">0 Ar</span>
+                    </span>
+                </div>
+                
+                <input 
+                    type="text" 
+                    id="paymentAmount" 
+                    placeholder="Ex: 10 000" 
+                    oninput="formatPaymentAmount()"
+                    style="font-size: 1.1rem; font-weight: 700; color: #059669; text-align: center;"
+                >
             </div>
+
+
 
             <div class="modal-input-group">
                 <label for="paymentDate">📅 Date du Paiement</label>
@@ -2906,7 +3399,10 @@
         // Variables globales pour la recherche d'employés
         let allEmployees = [];
         let selectedEmployeeIndex = -1;
-
+        // ✅ PAIEMENTS - Variables pour la modale
+        let currentPaymentEmployee = null;
+        let currentPaymentReste = 0;
+        let currentEditingPaymentId = null;
         // ⭐ NOUVEAU: Debug database pour vérifier les données
         const debugDatabase = () => {
             if (!db) {
@@ -3038,51 +3534,318 @@
             }
         };
 
-        // Initialisation de la base de données
+        /* ========================================
+        🎯 SYSTÈME DE NAVIGATION ENTRE VUES
+        ======================================== */
+
+        /**
+         * Navigation vers une vue spécifique
+         * @param {string} viewId - L'ID de la vue à afficher (ex: "dashboard", "add-employee")
+         */
+        const navigateTo = (viewId) => {
+            // Fermer la sidebar automatiquement
+            if (sidebarOpen) {
+                toggleSidebar();
+            }
+            
+            // Construire l'ID complet de la vue
+            const fullViewId = viewId.startsWith('view-') ? viewId : `view-${viewId}`;
+            
+            // Cacher toutes les vues
+            const allViews = document.querySelectorAll('.app-view');
+            allViews.forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Afficher la vue sélectionnée
+            const targetView = document.getElementById(fullViewId);
+            if (targetView) {
+                targetView.classList.add('active');
+                
+                // Scroll en haut de la page avec animation douce
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                
+                // Mettre à jour les items actifs dans la sidebar
+                updateActiveNavItem(viewId);
+                
+                // ✅ NOUVEAU : Rafraîchir les données de la vue
+                setTimeout(() => {
+                    refreshCurrentView();
+                }, 100);
+                // Log pour debug (à retirer en production)
+                console.log(`✅ Navigation vers: ${fullViewId}`);
+            } else {
+                console.error(`❌ Vue introuvable: ${fullViewId}`);
+            }
+        };
+
+        /**
+         * Met à jour l'élément actif dans la sidebar
+         * @param {string} viewId - L'ID de la vue active
+         */
+        const updateActiveNavItem = (viewId) => {
+            // Retirer la classe active de tous les items
+            const allNavItems = document.querySelectorAll('.nav-item');
+            allNavItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Ajouter la classe active à l'item correspondant
+            // Chercher par onclick qui contient navigateTo(viewId)
+            allNavItems.forEach(item => {
+                const onclick = item.getAttribute('onclick');
+                if (onclick && onclick.includes(`'${viewId}'`)) {
+                    item.classList.add('active');
+                }
+            });
+        };
+
+        /**
+         * Mapping des sections vers les vues
+         * Utilisé pour la compatibilité avec l'ancien système
+         */
+        const VIEW_MAPPING = {
+            // Dashboard
+            'dashboard': 'view-dashboard',
+            'quality-stats': 'view-quality-stats',
+            
+            // Employés
+            'add-employee': 'view-add-employee',
+            'manage-employees': 'view-manage-employees',
+            'employee-stats': 'view-employee-stats',
+            'salary': 'view-salary',
+            
+            // Pesage
+            'weighing': 'view-weighing',
+            'weighing-list': 'view-weighing-list',
+            'daily-stats': 'view-daily-stats',
+            
+            // Finances
+            'settings': 'view-settings',
+            'salary-calc': 'view-salary-calc',
+            'salary-repartition': 'view-salary-repartition',
+            'salary-details': 'view-salary-details',
+            
+            // Outils
+            'search': 'view-search',
+            'import-export': 'view-import-export',
+            'database-check': 'view-database-check'
+        };
+
+        /**
+         * Navigation avec mapping automatique
+         * @param {string} sectionName - Nom court de la section
+         */
+        const goToView = (sectionName) => {
+            const viewId = VIEW_MAPPING[sectionName] || `view-${sectionName}`;
+            navigateTo(viewId);
+        };
+
+        /**
+         * Initialiser la vue par défaut au chargement
+         */
+        const initializeViews = () => {
+            // S'assurer que seule la vue dashboard est active au démarrage
+            const allViews = document.querySelectorAll('.app-view');
+            allViews.forEach(view => {
+                view.classList.remove('active');
+            });
+            
+            // Activer le dashboard
+            const dashboard = document.getElementById('view-dashboard');
+            if (dashboard) {
+                dashboard.classList.add('active');
+            }
+            
+            console.log('✅ Système de vues initialisé - Dashboard actif');
+        };
+
+        /**
+         * Rafraîchir les données de la vue actuelle
+         */
+        const refreshCurrentView = () => {
+            const activeView = document.querySelector('.app-view.active');
+            if (!activeView) return;
+            
+            const viewId = activeView.id;
+            
+            // Appeler les fonctions de mise à jour selon la vue
+            switch(viewId) {
+                case 'view-dashboard':
+                    updateStats();
+                    updateSalaryStats();
+                    break;
+                
+                case 'view-salary-repartition':
+                    updateStats();
+                    updateSalaryStats();
+                    updateSalaryByQuality();
+                    break;
+                    
+                case 'view-manage-employees':
+                    loadEmployeeManagement();
+                    break;
+                    
+                case 'view-employee-stats':
+                    updateEmployeeStats();
+                    break;
+                    
+                case 'view-salary':
+                    updateSalaryTable();
+                    break;
+
+                case 'view-salary-details':
+                    updateSalaryDetailsTable();
+                    break;
+                    
+                case 'view-weighing-list':
+                    loadWeights();
+                    break;
+                    
+                case 'view-daily-stats':
+                    updateDailyQualityStats();
+                    break;
+                    
+                default:
+                    console.log(`Pas de rafraîchissement spécifique pour ${viewId}`);
+            }
+        };
+
+        /* ========================================
+        🌓 GESTION DU MODE SOMBRE
+        ======================================== */
+
+        /**
+         * Basculer entre mode clair et sombre
+         */
+        const toggleDarkMode = () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Mettre à jour l'icône dans la sidebar
+            updateThemeIconSidebar();
+            
+            console.log(`🌓 Thème changé: ${newTheme}`);
+        };
+
+        /**
+         * Mettre à jour l'icône de thème dans la sidebar
+         */
+        const updateThemeIconSidebar = () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            const icon = document.getElementById('themeIconSidebar');
+            const text = document.getElementById('themeTextSidebar');
+            
+            if (icon && text) {
+                if (theme === 'dark') {
+                    icon.textContent = '☀️';
+                    text.textContent = 'Mode Clair';
+                } else {
+                    icon.textContent = '🌙';
+                    text.textContent = 'Mode Sombre';
+                }
+            }
+        };
+
+        /**
+         * Initialiser le thème au chargement
+         */
+        const initTheme = () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            updateThemeIconSidebar();
+        };
+
+        // Charger le thème sauvegardé au démarrage
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+        });
+
+        /* ========================================
+        🎯 INITIALISATION AU CHARGEMENT
+        ======================================== */
+
+        // Initialiser les vues quand le DOM est prêt
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attendre un peu pour être sûr que tout est chargé
+            setTimeout(() => {
+                initializeViews();
+            }, 100);
+        });
+
+
+        /**
+         * Initialiser la base de données IndexedDB
+         */
         const initDB = () => {
             const request = indexedDB.open(dbName, dbVersion);
             
             request.onerror = (event) => {
-                console.error('Erreur de base de données:', event.target.error);
+                console.error('❌ Erreur de base de données:', event.target.error);
                 alert('ERREUR: Impossible d\'initialiser la base de données!');
             };
             
             request.onsuccess = (event) => {
                 db = event.target.result;
-                console.log('Base de données initialisée avec succès');
-                loadDefaultPrice();
-                loadAllEmployees();
-                loadWeights();
-                updateStats();
-                loadEmployeeManagement();
-                setTimeout(updateEmployeeStats, 1000);
+                console.log('✅ Base de données initialisée avec succès');
+                
+                // ✅ ORDRE D'INITIALISATION CORRIGÉ
+                loadDefaultPrice();           // 1. Charger le prix par défaut
+                loadAllEmployees();           // 2. Charger les employés
+                loadWeights();                // 3. Charger les pesages
+                updateStats();                // 4. Mettre à jour stats générales
+                updateSalaryStats();          // 5. ✅ AJOUT : Stats salaires
+                updateSalaryByQuality();      // 6. ✅ AJOUT : Répartition par qualité
+                loadEmployeeManagement();     // 7. Gestion employés
+                updateSalaryDetailsTable();   // 8. ✅ AJOUT : Détails salaires
+                
+                // Délai pour les stats employés (chargement lourd)
+                setTimeout(() => {
+                    updateEmployeeStats();
+                }, 1000);
+                
+                console.log('🎉 Toutes les données ont été chargées');
             };
             
             request.onupgradeneeded = (event) => {
                 db = event.target.result;
-
+                console.log('🔧 Mise à niveau de la base de données...');
+                
                 // Création des stores s'ils n'existent pas
                 if (!db.objectStoreNames.contains('employees')) {
                     const employeeStore = db.createObjectStore('employees', { keyPath: 'id', autoIncrement: true });
                     employeeStore.createIndex('name', 'name', { unique: true });
+                    console.log('✅ Store "employees" créé');
                 }
-
+                
                 if (!db.objectStoreNames.contains('weights')) {
                     const weightStore = db.createObjectStore('weights', { keyPath: 'id', autoIncrement: true });
                     weightStore.createIndex('employeeId', 'employeeId', { unique: false });
+                    console.log('✅ Store "weights" créé');
                 }
-
+                
                 if (!db.objectStoreNames.contains('prices')) {
                     db.createObjectStore('prices', { keyPath: 'id', autoIncrement: true });
+                    console.log('✅ Store "prices" créé');
                 }
-
+                
                 if (!db.objectStoreNames.contains('payments')) {
                     const paymentStore = db.createObjectStore('payments', { keyPath: 'id', autoIncrement: true });
                     paymentStore.createIndex('employeeId', 'employeeId', { unique: false });
+                    console.log('✅ Store "payments" créé');
                 }
+                
+                console.log('✅ Mise à niveau terminée');
+            };
+        };
 
-            }; // ✅ mihidy tsara eto ny onupgradeneeded
-        }; // ✅ mihidy koa ny initDB()
  
         // ============================================
         // VALIDATION EMPLOYÉ - NE PAS MODIFIER
@@ -3516,6 +4279,7 @@
                 loadWeights();
                 updateStats();
                 updateSalaryStats();
+                updateSalaryByQuality();
                 updateEmployeeStats();
                 loadEmployeeManagement();
                 updateDailySummary();
@@ -3796,9 +4560,16 @@
                 
             });
         };
-
-        // Mettre à jour les statistiques des salaires
+        
+        /**
+         * Mettre à jour les statistiques des salaires avec formatage
+         */
         const updateSalaryStats = () => {
+            if (!db) {
+                console.warn('⚠️ Base de données non initialisée');
+                return;
+            }
+            
             const transaction = db.transaction(['weights'], 'readonly');
             const weightStore = transaction.objectStore('weights');
             const request = weightStore.getAll();
@@ -3821,20 +4592,45 @@
                 
                 const totalSalary = weights.reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
                 
-                // Mettre à jour l'affichage
-                document.getElementById('todaySalary').textContent = todaySalary.toLocaleString('fr-FR') + ' Ar';
-                document.getElementById('monthlySalary').textContent = monthlySalary.toLocaleString('fr-FR') + ' Ar';
-                document.getElementById('totalSalary').textContent = totalSalary.toLocaleString('fr-FR') + ' Ar';
+                // ✅ MISE À JOUR AVEC FORMATAGE DES MILLIERS
+                // Vue quality-stats (Dashboard)
+                updateIfExists('todaySalary', `${todaySalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('monthlySalary', `${monthlySalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('totalSalary', `${totalSalary.toLocaleString('fr-FR')} Ar`);
                 
-                // Mettre à jour le tableau des salaires par employé
-                updateSalaryTable();
-                updateSalaryByQuality(); // ⭐ NOUVEAU
-                applyThousandSeparators();
+                // Vue salary-repartition (Finances)
+                updateIfExists('totalSalaryRepartition', `${totalSalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('monthlySalaryRepartition', `${monthlySalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('todaySalaryRepartition', `${todaySalary.toLocaleString('fr-FR')} Ar`);
+                
+                // Vue salary-calc (si elle existe)
+                updateIfExists('totalSalary2', `${totalSalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('monthlySalary2', `${monthlySalary.toLocaleString('fr-FR')} Ar`);
+                updateIfExists('todaySalary2', `${todaySalary.toLocaleString('fr-FR')} Ar`);
+                
+                console.log('✅ Statistiques salaires mises à jour:', {
+                    today: todaySalary.toLocaleString('fr-FR'),
+                    month: monthlySalary.toLocaleString('fr-FR'),
+                    total: totalSalary.toLocaleString('fr-FR')
+                });
+            };
+            
+            request.onerror = () => {
+                console.error('❌ Erreur lors du chargement des salaires');
             };
         };
 
-        // ⭐ NOUVEAU: Mettre à jour répartition salaires par qualité
+
+
+        /**
+         * Mettre à jour la répartition des salaires par qualité
+         */
         const updateSalaryByQuality = () => {
+            if (!db) {
+                console.error('❌ Base de données non initialisée');
+                return;
+            }
+            
             const transaction = db.transaction(['weights', 'payments'], 'readonly');
             const weightStore = transaction.objectStore('weights');
             const paymentStore = transaction.objectStore('payments');
@@ -3846,6 +4642,7 @@
                 new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
                 new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
             ]).then(([weights, payments]) => {
+                
                 const qualityMap = {};
                 
                 // Grouper par qualité
@@ -3868,166 +4665,273 @@
                     qualityMap[qualityName].count += 1;
                 });
                 
-                // ⭐ NOUVEAU: Calculer total des paiements
+                // Calculer tous les totaux
                 const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
                 const totalSalary = Object.values(qualityMap).reduce((sum, q) => sum + q.totalSalary, 0);
+                const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+                const totalCount = weights.length;
                 const netSalary = totalSalary - totalPayments;
                 
-                // Générer les cartes
-                const container = document.getElementById('salaryByQualityGrid');
-                container.innerHTML = '';
+                // ✅ METTRE À JOUR UNIQUEMENT salaryRepartitionGrid (Finances)
+                // ❌ SUPPRIMÉ : updateQualityContainer('salaryByQualityGrid', ...)
+                updateQualityContainer('salaryRepartitionGrid', qualityMap, totalPayments, netSalary, totalWeight, totalCount);
                 
-                // Trier par salaire décroissant
-                const sortedQualities = Object.entries(qualityMap)
-                    .sort((a, b) => b[1].totalSalary - a[1].totalSalary);
+                // Mettre à jour les totaux dans toutes les vues
+                const monthSalary = calculateMonthlySalary(weights);
+                const todaySal = calculateTodaySalary(weights);
                 
-                sortedQualities.forEach(([qualityName, data]) => {
-                    // Icône et couleurs dynamiques selon prix
-                    let icon = '💎';
-                    let gradient = 'linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(4, 120, 87, 0.15))';
-                    let textColor = '#059669';
-                    let borderColor = 'rgba(5, 150, 105, 0.3)';
-                    
-                    if (data.price >= 500) {
-                        icon = '⭐';
-                        gradient = 'linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(180, 83, 9, 0.15))';
-                        textColor = '#d97706';
-                        borderColor = 'rgba(217, 119, 6, 0.3)';
-                    } else if (data.price >= 400) {
-                        icon = '💎';
-                        gradient = 'linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(4, 120, 87, 0.15))';
-                        textColor = '#059669';
-                        borderColor = 'rgba(5, 150, 105, 0.3)';
-                    } else if (data.price >= 300) {
-                        icon = '✓';
-                        gradient = 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15))';
-                        textColor = '#3b82f6';
-                        borderColor = 'rgba(59, 130, 246, 0.3)';
-                    } else if (data.price > 0) {
-                        icon = '○';
-                        gradient = 'linear-gradient(135deg, rgba(100, 116, 139, 0.15), rgba(71, 85, 105, 0.15))';
-                        textColor = '#64748b';
-                        borderColor = 'rgba(100, 116, 139, 0.3)';
-                    }
-                    
-                    const avgWeight = data.totalWeight / data.count;
-                    const percentTotal = sortedQualities.length > 0 ? 
-                        (data.totalSalary / sortedQualities.reduce((sum, [_, d]) => sum + d.totalSalary, 0) * 100) : 0;
-                    
-                    const card = document.createElement('div');
-                    card.style.cssText = `
-                        background: ${gradient};
-                        padding: 20px;
-                        border-radius: 16px;
-                        border: 2px solid ${borderColor};
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                    `;
-                    
-                    card.onmouseover = () => {
-                        card.style.transform = 'translateY(-4px)';
-                        card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-                    };
-                    card.onmouseout = () => {
-                        card.style.transform = 'translateY(0)';
-                        card.style.boxShadow = 'none';
-                    };
-                    
-                    card.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                            <span style="font-size: 1.5rem;">${icon}</span>
-                            <span style="background: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: ${textColor};">
-                                ${percentTotal.toFixed(1)}%
-                            </span>
-                        </div>
-                        
-                        <div style="margin-bottom: 8px;">
-                            <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 4px;">
-                                ${qualityName}
-                            </div>
-                            <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
-                                ${data.price.toLocaleString('fr-FR')} Ar/kg
-                            </div>
-                        </div>
-                        
-                        <div style="height: 1px; background: ${borderColor}; margin: 12px 0;"></div>
-                        
-                        <div style="display: grid; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                                <span style="color: #64748b;">Poids:</span>
-                                <span style="font-weight: 700; color: #1e293b;">${data.totalWeight.toFixed(1)} kg</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                                <span style="color: #64748b;">Pesages:</span>
-                                <span style="font-weight: 700; color: #1e293b;">${data.count}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                                <span style="color: #64748b;">Moyenne:</span>
-                                <span style="font-weight: 700; color: #1e293b;">${avgWeight.toFixed(1)} kg</span>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 10px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 4px;">
-                                    SALAIRE TOTAL
-                                </div>
-                                <div style="font-size: 1.5rem; font-weight: 800; color: ${textColor};">
-                                    ${data.totalSalary.toLocaleString('fr-FR')} Ar
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
+                // Vue quality-stats (Dashboard) - si elle existe encore
+                updateIfExists('totalSalary', totalSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('monthlySalary', monthSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('todaySalary', todaySal.toLocaleString('fr-FR') + ' Ar');
+                
+                // Vue salary-repartition (Finances)
+                updateIfExists('totalSalaryRepartition', totalSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('monthlySalaryRepartition', monthSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('todaySalaryRepartition', todaySal.toLocaleString('fr-FR') + ' Ar');
+                
+                // Vue salary-calc (si elle existe)
+                updateIfExists('totalSalary2', totalSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('monthlySalary2', monthSalary.toLocaleString('fr-FR') + ' Ar');
+                updateIfExists('todaySalary2', todaySal.toLocaleString('fr-FR') + ' Ar');
+                
+                console.log('✅ Répartition mise à jour:', {
+                    totalSalary: totalSalary.toLocaleString('fr-FR') + ' Ar',
+                    totalWeight: totalWeight.toLocaleString('fr-FR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' kg',
+                    totalCount: totalCount.toLocaleString('fr-FR'),
+                    totalPayments: totalPayments.toLocaleString('fr-FR') + ' Ar',
+                    netSalary: netSalary.toLocaleString('fr-FR') + ' Ar',
+                    qualités: Object.keys(qualityMap).length
                 });
-                
-                // ⭐ NOUVEAU: Carte récapitulative FINALE
-                const summaryCard = document.createElement('div');
-                summaryCard.style.cssText = `
-                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
-                    padding: 24px;
-                    border-radius: 16px;
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    color: white;
-                    grid-column: 1 / -1;
-                `;
-                
-                summaryCard.innerHTML = `
-                    <h4 style="color: white; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; text-align: center;">
-                        📊 RÉCAPITULATIF GLOBAL
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">💰 Salaires Bruts</div>
-                            <div style="font-size: 1.8rem; font-weight: 800;">${totalSalary.toLocaleString('fr-FR')} Ar</div>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
-                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">✅ Avances Payées</div>
-                            <div style="font-size: 1.8rem; font-weight: 800; color: #60a5fa;">${totalPayments.toLocaleString('fr-FR')} Ar</div>
-                        </div>
-                        <div style="background: ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; padding: 16px; border-radius: 12px; text-align: center; border: 2px solid ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'};">
-                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 6px; font-weight: 700;">⚠️ RESTE À PAYER</div>
-                            <div style="font-size: 2rem; font-weight: 900; color: ${netSalary >= 0 ? '#22c55e' : '#ef4444'};">${netSalary.toLocaleString('fr-FR')} Ar</div>
-                        </div>
+            });
+        };
+
+        /* ========================================
+        🛠️ FONCTIONS AUXILIAIRES
+        ======================================== */
+
+        /**
+         * Mettre à jour un conteneur de qualité complet
+         */
+        const updateQualityContainer = (containerId, qualityMap, totalPayments, netSalary, totalWeight, totalCount) => {
+            const container = document.getElementById(containerId);
+            if (!container) {
+                console.warn(`⚠️ Conteneur ${containerId} introuvable`);
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // Calculer le total des salaires
+            const totalSalary = Object.values(qualityMap).reduce((sum, q) => sum + q.totalSalary, 0);
+            
+            // Trier par salaire décroissant
+            const sortedQualities = Object.entries(qualityMap).sort((a, b) => b[1].totalSalary - a[1].totalSalary);
+            
+            if (sortedQualities.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">📊</div>
+                        <div style="font-size: 1.1rem; font-weight: 600;">Aucune donnée disponible</div>
+                        <div style="font-size: 0.9rem; margin-top: 8px;">Enregistrez des pesages pour voir les statistiques</div>
                     </div>
                 `;
-                
-                container.appendChild(summaryCard);
-                
-                // Message si aucune donnée
-                if (sortedQualities.length === 0) {
-                    container.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
-                            <div style="font-size: 3rem; margin-bottom: 12px;">📊</div>
-                            <div style="font-size: 1.1rem; font-weight: 600;">Aucune donnée disponible</div>
-                            <div style="font-size: 0.9rem; margin-top: 8px;">Enregistrez des pesages pour voir les statistiques</div>
-                        </div>
-                    `;
-                }
-                
-                applyThousandSeparators();
+                return;
+            }
+            
+            // Créer les cartes de qualité
+            sortedQualities.forEach(([qualityName, data]) => {
+                const card = createQualityCard(qualityName, data, totalSalary);
+                container.appendChild(card);
             });
+            
+            // ✅ AJOUTER LE RÉCAPITULATIF AVEC LES 5 PARAMÈTRES
+            const summaryCard = createSummaryCard(totalSalary, totalWeight, totalCount, totalPayments, netSalary);
+            container.appendChild(summaryCard);
+            
+            console.log(`✅ Conteneur ${containerId} mis à jour:`, {
+                qualités: sortedQualities.length,
+                totalSalary: totalSalary.toLocaleString('fr-FR') + ' Ar',
+                totalWeight: totalWeight.toLocaleString('fr-FR', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' kg',
+                totalCount: totalCount.toLocaleString('fr-FR'),
+                totalPayments: totalPayments.toLocaleString('fr-FR') + ' Ar'
+            });
+        };
+
+
+        /**
+         * Créer une carte de qualité avec formatage complet des milliers
+         */
+        const createQualityCard = (qualityName, data, totalSalary) => {
+            let icon = '💎', gradient, textColor, borderColor;
+            
+            // Déterminer les couleurs selon le prix
+            if (data.price >= 500) {
+                icon = '👑';
+                gradient = 'linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(180, 83, 9, 0.15))';
+                textColor = '#d97706';
+                borderColor = 'rgba(217, 119, 6, 0.3)';
+            } else if (data.price >= 400) {
+                icon = '💎';
+                gradient = 'linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(4, 120, 87, 0.15))';
+                textColor = '#059669';
+                borderColor = 'rgba(5, 150, 105, 0.3)';
+            } else if (data.price >= 300) {
+                icon = '🔷';
+                gradient = 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15))';
+                textColor = '#3b82f6';
+                borderColor = 'rgba(59, 130, 246, 0.3)';
+            } else {
+                icon = '📦';
+                gradient = 'linear-gradient(135deg, rgba(100, 116, 139, 0.15), rgba(71, 85, 105, 0.15))';
+                textColor = '#64748b';
+                borderColor = 'rgba(100, 116, 139, 0.3)';
+            }
+            
+            // Calculs
+            const percentTotal = (data.totalSalary / totalSalary * 100).toFixed(1);
+            const avgWeight = (data.totalWeight / data.count);
+            
+            // Créer la carte
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: ${gradient}; 
+                padding: 20px; 
+                border-radius: 16px; 
+                border: 2px solid ${borderColor}; 
+                transition: all 0.3s ease; 
+                cursor: pointer;
+            `;
+            
+            // Effets hover
+            card.onmouseover = () => { 
+                card.style.transform = 'translateY(-4px)'; 
+                card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)'; 
+            };
+            card.onmouseout = () => { 
+                card.style.transform = 'translateY(0)'; 
+                card.style.boxShadow = 'none'; 
+            };
+            
+            // Contenu de la carte avec TOUS les formatages
+            card.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <span style="font-size: 1.5rem;">${icon}</span>
+                    <span style="background: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: ${textColor};">${percentTotal}%</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 4px;">${qualityName}</div>
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">${data.price.toLocaleString('fr-FR')} Ar/kg</div>
+                </div>
+                <div style="height: 1px; background: ${borderColor}; margin: 12px 0;"></div>
+                <div style="display: grid; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span style="color: #64748b;">⚖️ Poids</span>
+                        <span style="font-weight: 700; color: #1e293b;">${data.totalWeight.toLocaleString('fr-FR', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kg</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span style="color: #64748b;">📊 Pesages</span>
+                        <span style="font-weight: 700; color: #1e293b;">${data.count.toLocaleString('fr-FR')}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                        <span style="color: #64748b;">📈 Moyenne</span>
+                        <span style="font-weight: 700; color: #1e293b;">${avgWeight.toLocaleString('fr-FR', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kg</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 4px;">💰 SALAIRE TOTAL</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: ${textColor};">${data.totalSalary.toLocaleString('fr-FR')} Ar</div>
+                </div>
+            `;
+            
+            return card;
+        };
+
+        /**
+         * Créer la carte récapitulative avec formatage des milliers
+         */
+        const createSummaryCard = (totalSalary, totalWeight, totalCount, totalPayments, netSalary) => {
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+                padding: 24px;
+                border-radius: 16px;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                color: white;
+                grid-column: 1 / -1;
+                margin-top: 20px;
+            `;
+            
+            card.innerHTML = `
+                <h4 style="color: white; margin-bottom: 16px; font-size: 1.1rem; font-weight: 700; text-align: center;">
+                    📊 RÉCAPITULATIF GLOBAL
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">💰 Salaires Bruts</div>
+                        <div style="font-size: 1.8rem; font-weight: 800;">${totalSalary.toLocaleString('fr-FR')} Ar</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">⚖️ Poids Total</div>
+                        <div style="font-size: 1.8rem; font-weight: 800;">${totalWeight.toLocaleString('fr-FR', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kg</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">📊 Total Pesages</div>
+                        <div style="font-size: 1.8rem; font-weight: 800;">${totalCount.toLocaleString('fr-FR')}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px;">✅ Avances Payées</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #60a5fa;">${totalPayments.toLocaleString('fr-FR')} Ar</div>
+                    </div>
+                    <div style="background: ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; 
+                                padding: 16px; 
+                                border-radius: 12px; 
+                                text-align: center; 
+                                border: 2px solid ${netSalary >= 0 ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}; 
+                                grid-column: span 2;">
+                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 6px; font-weight: 700;">⚠️ RESTE À PAYER</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: ${netSalary >= 0 ? '#22c55e' : '#ef4444'};">
+                            ${netSalary.toLocaleString('fr-FR')} Ar
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        };
+
+
+        /**
+         * Mettre à jour un élément si il existe (évite les erreurs)
+         */
+        const updateIfExists = (elementId, value) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = value;
+            } else {
+                // Mode debug : afficher les éléments manquants
+                // console.warn(`⚠️ Élément introuvable: ${elementId}`);
+            }
+        };
+
+
+        /**
+         * Calculer le salaire mensuel
+         */
+        const calculateMonthlySalary = (weights) => {
+            const now = new Date();
+            return weights.filter(w => {
+                const d = new Date(w.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
+        };
+
+        /**
+         * Calculer le salaire d'aujourd'hui
+         */
+        const calculateTodaySalary = (weights) => {
+            const today = new Date().toISOString().split('T')[0];
+            return weights.filter(w => w.date === today).reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
         };
 
         // Mettre à jour les statistiques par employé (avec paiements)
@@ -4823,6 +5727,21 @@
                 e.stopPropagation();
             });
         });
+
+        /* 📊 SCROLL INDICATOR - VERSION SIMPLE */
+        const setupTableScrollIndicator = () => {
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.addEventListener('scroll', function() {
+                    this.classList.add('scrolled');
+                }, { passive: true, once: false });
+            });
+        };
+
+        // Exécuter au chargement et après mises à jour
+        document.addEventListener('DOMContentLoaded', setupTableScrollIndicator);
+        window.reinitScrollIndicators = () => setTimeout(setupTableScrollIndicator, 100);
+
+
         // NOUVEAU: Mettre à jour les statistiques des résultats de recherche
         const updateSearchStats = (weights) => {
             const statsDiv = document.getElementById('searchStats');
@@ -4967,9 +5886,6 @@
             };
         };
 
-        let currentPaymentEmployee = null;
-        let currentPaymentReste = 0;
-        let currentEditingPaymentId = null;
         // ⭐ NOUVEAU: Variables pour modal détail poids
         let currentModalEmployeeId = null;
         let currentModalEmployeeName = '';
@@ -5175,75 +6091,119 @@
             document.body.removeChild(link);
         };
 
-        const openPaymentModal = async (id, name, reste, totalSalary, alreadyPaid) => { // ⭐ async
-            // ⭐ VÉRIFIER ALERTE
+        /**
+         * Ouvrir la modale de paiement (avec formatage en temps réel)
+         */
+        const openPaymentModal = async (id, name, reste, totalSalary, alreadyPaid) => {
             await checkEmployeeAlert(id, name);
             
             currentPaymentEmployee = id;
-            currentPaymentReste = reste;
-
+            currentPaymentReste = reste; // ✅ Variable globale pour le reste
+            
             document.getElementById('paymentEmployeeName').textContent = name;
             document.getElementById('paymentTotalSalary').textContent = totalSalary.toLocaleString('fr-FR') + ' Ar';
             document.getElementById('paymentAlreadyPaid').textContent = alreadyPaid.toLocaleString('fr-FR') + ' Ar';
             document.getElementById('paymentRemaining').textContent = reste.toLocaleString('fr-FR') + ' Ar';
-            document.getElementById('paymentAmount').value = '';
+            
+            // ✅ Initialiser l'affichage du reste
+            updateRemainingDisplay(reste);
+            
+            // Pré-remplir avec le montant restant (optionnel)
+            document.getElementById('paymentAmount').value = reste.toLocaleString('fr-FR');
             document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('paymentNote').value = '';
+            
             document.getElementById('paymentModal').style.display = 'block';
             
-            applyThousandSeparators();
+            setTimeout(() => {
+                const amountInput = document.getElementById('paymentAmount');
+                if (amountInput) {
+                    amountInput.focus();
+                    amountInput.select();
+                }
+            }, 100);
         };
 
+        /**
+         * Fermer la modale de paiement
+         */
         const closePaymentModal = () => {
             document.getElementById('paymentModal').style.display = 'none';
+            
+            // ✅ Réinitialiser les variables
             currentPaymentEmployee = null;
             currentPaymentReste = 0;
+            
+            // Vider les champs
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentDate').value = '';
+            document.getElementById('paymentNote').value = '';
         };
 
+
+        /**
+         * Confirmer et enregistrer le paiement
+         */
         const confirmPayment = () => {
-            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            // ✅ Utiliser currentPaymentEmployee (pas currentPaymentEmployeeId)
+            if (!db || !currentPaymentEmployee) {
+                alert('⚠️ Erreur : aucun employé sélectionné');
+                return;
+            }
+            
+            // Récupérer les valeurs
+            const amount = getPaymentAmountValue();
             const date = document.getElementById('paymentDate').value;
             const note = document.getElementById('paymentNote').value.trim();
             
-            if (isNaN(amount) || amount <= 0) {
-                alert("⚠️ Veuillez entrer un montant valide !");
+            // Validation
+            if (amount <= 0) {
+                alert('⚠️ Le montant doit être supérieur à 0');
                 return;
             }
-
+            
             if (!date) {
-                alert("⚠️ Veuillez sélectionner une date !");
+                alert('⚠️ La date est obligatoire');
                 return;
             }
-
-            if (amount > currentPaymentReste) {
-                if (!confirm(`⚠️ Le montant (${amount.toLocaleString('fr-FR')} Ar) dépasse le reste à payer (${currentPaymentReste.toLocaleString('fr-FR')} Ar).\n\nContinuer quand même ?`)) {
-                    return;
-                }
-            }
-
+            
+            // Enregistrement dans IndexedDB
             const transaction = db.transaction(['payments'], 'readwrite');
             const store = transaction.objectStore('payments');
-            const paymentData = {
-                employeeId: currentPaymentEmployee,
+            
+            const payment = {
+                employeeId: currentPaymentEmployee,  // ✅ Correct
                 amount: amount,
                 date: date,
-                note: note || null,
+                note: note || '',
                 createdAt: new Date().toISOString()
             };
             
-            store.add(paymentData);
-
-            transaction.oncomplete = () => {
-                alert("✅ Paiement enregistré avec succès !");
+            const request = store.add(payment);
+            
+            request.onsuccess = () => {
+                console.log('✅ Paiement enregistré avec succès');
+                
+                // Fermer la modale
                 closePaymentModal();
+                
+                // Rafraîchir les données
                 updateEmployeeStats();
-                updateSalaryStats();
+                updateSalaryTable();
+                updateSalaryByQuality();
+                updateSalaryDetailsTable();
+                
+                // Message de succès
+                alert(`✅ Paiement de ${amount.toLocaleString('fr-FR')} Ar enregistré avec succès!`);
             };
-
-            transaction.onerror = () => {
-                alert("❌ Erreur lors de l'enregistrement du paiement !");
+            
+            request.onerror = (event) => {
+                console.error('❌ Erreur lors de l\'enregistrement du paiement:', event.target.error);
+                alert('❌ Erreur lors de l\'enregistrement du paiement');
             };
         };
+
+
 
         // Modifier un paiement
         const editPayment = (paymentId) => {
@@ -6152,90 +7112,6 @@
         };
 
         // ========================================
-        // 🎯 NAVIGATION ENTRE SECTIONS
-        // ========================================
-
-        const navigateTo = (section) => {
-            // Fermer sidebar d'abord
-            if (sidebarOpen) {
-                toggleSidebar();
-            }
-            
-            // Attendre que sidebar se ferme avant de scroller
-            setTimeout(() => {
-                // Retirer classe active de tous les items
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                // Ajouter active à l'item cliqué
-                if (event && event.target) {
-                    const clickedItem = event.target.closest('.nav-item');
-                    if (clickedItem) {
-                        clickedItem.classList.add('active');
-                    }
-                }
-                
-                // Mapping COMPLET des sections vers IDs d'éléments
-                const sectionMap = {
-                    // Dashboard
-                    'dashboard': 'totalEmployees',
-                    'quality-stats': 'salaryByQualityGrid',
-                    
-                    // Employés
-                    'add-employee': 'employeeName',
-                    'manage-employees': 'employeesTable',
-                    'employee-stats': 'employeeStats',
-                    'salary': 'salaryTable',
-                    
-                    // Pesage
-                    'weighing': 'employeeSearchInput',
-                    'weighing-list': 'weightsTable',
-                    'daily-stats': 'dailyStatsDate',
-                    
-                    // Finances
-                    'settings': 'defaultPricePerKg',
-                    'salary-calc': 'totalSalary',
-                    
-                    // Outils
-                    'search': 'nameFilter',
-                    'import-export': 'jsonFileInput',
-                    'database-check': 'defaultPricePerKg'
-                };
-                
-                const targetId = sectionMap[section];
-                if (targetId) {
-                    const element = document.getElementById(targetId);
-                    if (element) {
-                        // Scroll smooth vers la section
-                        element.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start',
-                            inline: 'nearest'
-                        });
-                        
-                        // Effet highlight temporaire sur la section parente
-                        const parentSection = element.closest('.form-section') || 
-                                            element.closest('.stats-grid') || 
-                                            element.closest('.glass-card') || 
-                                            element;
-                        
-                        if (parentSection) {
-                            parentSection.style.transition = 'all 0.3s ease';
-                            parentSection.style.transform = 'scale(1.01)';
-                            parentSection.style.boxShadow = '0 0 30px rgba(100, 116, 139, 0.3)';
-                            
-                            setTimeout(() => {
-                                parentSection.style.transform = '';
-                                parentSection.style.boxShadow = '';
-                            }, 600);
-                        }
-                    }
-                }
-            }, sidebarOpen ? 400 : 0);
-        };
-
-        // ========================================
         // 🎯 EVENT LISTENERS
         // ========================================
 
@@ -6267,44 +7143,6 @@
             // Initialiser thème sidebar
             updateThemeIconSidebar();
         });
-
-        // ========================================
-        // 🎯 GESTION DARK MODE
-        // ========================================
-
-        // Mettre à jour icône thème dans sidebar
-        const updateThemeIconSidebar = () => {
-            const theme = document.documentElement.getAttribute('data-theme');
-            const icon = document.getElementById('themeIconSidebar');
-            const text = document.getElementById('themeTextSidebar');
-            
-            if (icon && text) {
-                if (theme === 'dark') {
-                    icon.textContent = '☀️';
-                    text.textContent = 'Mode Clair';
-                } else {
-                    icon.textContent = '🌙';
-                    text.textContent = 'Mode Sombre';
-                }
-            }
-        };
-
-        // Fonction toggleDarkMode améliorée
-        const toggleDarkMode = () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIconSidebar();
-        };
-
-        // Charger thème sauvegardé au démarrage
-        (function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-        })();
 
         // ========================================
         // 🎯 GESTURES MOBILES
@@ -6377,12 +7215,6 @@
             }, 100);
         }, { passive: true });
 
-        function updateActiveNavItem() {
-            // Cette fonction peut être développée pour mettre à jour
-            // automatiquement l'item actif basé sur la section visible
-            // Pour l'instant, on la laisse vide
-        }
-
         // ========================================
         // 🎯 DEBUG (à retirer en production)
         // ========================================
@@ -6395,6 +7227,330 @@
         };
 
         // Appeler avec: debugSidebar() dans la console
+
+        /* ========================================
+        💵 DÉTAILS SALAIRES - FONCTIONS
+        ======================================== */
+
+        /**
+         * Mettre à jour le tableau détaillé des salaires
+         */
+        const updateSalaryDetailsTable = () => {
+            if (!db) return;
+            
+            const transaction = db.transaction(['weights', 'employees', 'payments'], 'readonly');
+            const weightStore = transaction.objectStore('weights');
+            const employeeStore = transaction.objectStore('employees');
+            const paymentStore = transaction.objectStore('payments');
+            
+            const weightRequest = weightStore.getAll();
+            const employeeRequest = employeeStore.getAll();
+            const paymentRequest = paymentStore.getAll();
+            
+            Promise.all([
+                new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
+                new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); }),
+                new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
+            ]).then(([weights, employees, payments]) => {
+                
+                // Stocker globalement pour les filtres
+                window.salaryDetailsData = { weights, employees, payments };
+                
+                // Appliquer les filtres
+                filterSalaryDetails();
+            });
+        };
+
+        /**
+         * Filtrer et afficher les détails salaires
+         */
+        const filterSalaryDetails = () => {
+            if (!window.salaryDetailsData) return;
+            
+            const { weights, employees, payments } = window.salaryDetailsData;
+            
+            // Récupérer les filtres
+            const searchTerm = (document.getElementById('salaryDetailsSearch')?.value || '').toLowerCase();
+            const period = document.getElementById('salaryDetailsPeriod')?.value || 'all';
+            const sortBy = document.getElementById('salaryDetailsSort')?.value || 'salary-desc';
+            
+            // Filtrer par période
+            let filteredWeights = filterByPeriod(weights, period);
+            
+            // Calculer les salaires par employé
+            let employeeData = employees.map(employee => {
+                const employeeWeights = filteredWeights.filter(w => w.employeeId === employee.id);
+                const allEmployeeWeights = weights.filter(w => w.employeeId === employee.id);
+                
+                const totalWeight = employeeWeights.reduce((sum, w) => sum + w.weight, 0);
+                const totalSalary = allEmployeeWeights.reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
+                const periodSalary = employeeWeights.reduce((sum, w) => sum + (w.weight * getPriceForWeight(w)), 0);
+                
+                const employeePayments = payments.filter(p => p.employeeId === employee.id);
+                const totalPaid = employeePayments.reduce((sum, p) => sum + p.amount, 0);
+                const remaining = totalSalary - totalPaid;
+                
+                const avgWeight = employeeWeights.length > 0 ? totalWeight / employeeWeights.length : 0;
+                
+                return {
+                    name: employee.name,
+                    totalWeight,
+                    count: employeeWeights.length,
+                    avgWeight,
+                    totalSalary,
+                    periodSalary,
+                    totalPaid,
+                    remaining
+                };
+            });
+            
+            // Filtrer par recherche
+            if (searchTerm) {
+                employeeData = employeeData.filter(e => e.name.toLowerCase().includes(searchTerm));
+            }
+            
+            // Trier
+            employeeData.sort((a, b) => {
+                switch(sortBy) {
+                    case 'salary-desc': return b.totalSalary - a.totalSalary;
+                    case 'salary-asc': return a.totalSalary - b.totalSalary;
+                    case 'weight-desc': return b.totalWeight - a.totalWeight;
+                    case 'weight-asc': return a.totalWeight - b.totalWeight;
+                    case 'name-asc': return a.name.localeCompare(b.name);
+                    case 'name-desc': return b.name.localeCompare(a.name);
+                    default: return 0;
+                }
+            });
+            
+            // Mettre à jour le résumé
+            const totalSalaryFiltered = employeeData.reduce((sum, e) => sum + e.totalSalary, 0);
+            const totalWeightFiltered = employeeData.reduce((sum, e) => sum + e.totalWeight, 0);
+            const avgSalaryFiltered = employeeData.length > 0 ? totalSalaryFiltered / employeeData.length : 0;
+            
+            document.getElementById('detailsTotalSalaryFiltered').textContent = totalSalaryFiltered.toLocaleString('fr-FR') + ' Ar';
+            document.getElementById('detailsTotalWeightFiltered').textContent = totalWeightFiltered.toFixed(1) + ' kg';
+            document.getElementById('detailsAvgSalaryFiltered').textContent = avgSalaryFiltered.toLocaleString('fr-FR') + ' Ar';
+            document.getElementById('detailsEmployeeCountFiltered').textContent = employeeData.length;
+            
+            // Mettre à jour le tableau
+            const tbody = document.getElementById('salaryDetailsTableBodyComplete');
+            tbody.innerHTML = '';
+            
+            if (employeeData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">📭 Aucun résultat trouvé</td></tr>';
+                return;
+            }
+            
+            employeeData.forEach(emp => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td style="font-weight: 700; color: #1e293b;">👤 ${emp.name}</td>
+                    <td>${emp.totalWeight.toFixed(1)} kg</td>
+                    <td>${emp.count}</td>
+                    <td>${emp.avgWeight.toFixed(1)} kg</td>
+                    <td style="font-weight: 700; color: #059669;">${emp.totalSalary.toLocaleString('fr-FR')} Ar</td>
+                    <td style="font-weight: 600; color: #3b82f6;">${emp.periodSalary.toLocaleString('fr-FR')} Ar</td>
+                    <td style="font-weight: 600; color: #0ea5e9;">${emp.totalPaid.toLocaleString('fr-FR')} Ar</td>
+                    <td style="font-weight: 700; color: ${emp.remaining >= 0 ? '#22c55e' : '#ef4444'};">${emp.remaining.toLocaleString('fr-FR')} Ar</td>
+                `;
+            });
+        };
+
+        /**
+         * Filtrer par période
+         */
+        const filterByPeriod = (weights, period) => {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            
+            switch(period) {
+                case 'today':
+                    return weights.filter(w => w.date === today);
+                    
+                case 'week':
+                    const weekAgo = new Date(now);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return weights.filter(w => new Date(w.date) >= weekAgo);
+                    
+                case 'month':
+                    return weights.filter(w => {
+                        const d = new Date(w.date);
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+                    
+                case 'year':
+                    return weights.filter(w => {
+                        const d = new Date(w.date);
+                        return d.getFullYear() === now.getFullYear();
+                    });
+                    
+                default: // 'all'
+                    return weights;
+            }
+        };
+
+        /**
+         * Réinitialiser les filtres
+         */
+        const clearSalaryDetailsFilters = () => {
+            document.getElementById('salaryDetailsSearch').value = '';
+            document.getElementById('salaryDetailsPeriod').value = 'month';
+            document.getElementById('salaryDetailsSort').value = 'salary-desc';
+            filterSalaryDetails();
+        };
+
+        /**
+         * Exporter en CSV
+         */
+        const exportSalaryDetailsCSV = () => {
+            const table = document.getElementById('salaryDetailsTableComplete');
+            let csv = '';
+            
+            // Headers
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+            csv += headers.join(';') + '\n';
+            
+            // Rows
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent);
+                csv += cells.join(';') + '\n';
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `details-salaires-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        };
+
+        /**
+         * Imprimer
+         */
+        const printSalaryDetails = () => {
+            window.print();
+        };
+
+        /**
+         * Formater le montant du paiement en temps réel + calculer le reste
+         */
+        const formatPaymentAmount = () => {
+            const input = document.getElementById('paymentAmount');
+            if (!input) return;
+            
+            // Récupérer la valeur et supprimer tous les espaces
+            let value = input.value.replace(/\s/g, '');
+            
+            // Si vide, réinitialiser l'affichage du reste
+            if (!value) {
+                input.value = '';
+                updateRemainingDisplay(currentPaymentReste); // Afficher le total
+                return;
+            }
+            
+            // Convertir en nombre
+            const number = parseInt(value);
+            
+            // Si invalide, ne rien faire
+            if (isNaN(number)) {
+                input.value = '';
+                updateRemainingDisplay(currentPaymentReste);
+                return;
+            }
+            
+            // Formater avec séparateur de milliers
+            const formatted = number.toLocaleString('fr-FR');
+            
+            // Mettre à jour la valeur
+            input.value = formatted;
+            
+            // ✅ CALCULER ET AFFICHER LE RESTE
+            const newRemaining = currentPaymentReste - number;
+            updateRemainingDisplay(newRemaining);
+        };
+
+        /**
+         * Mettre à jour l'affichage du reste à payer
+         */
+        const updateRemainingDisplay = (remaining) => {
+            const remainingElement = document.getElementById('paymentRemaining2');
+            if (!remainingElement) return;
+            
+            // Formater le montant
+            const formattedRemaining = remaining.toLocaleString('fr-FR') + ' Ar';
+            remainingElement.textContent = formattedRemaining;
+            
+            // ✅ CHANGER LA COULEUR selon le montant
+            const container = remainingElement.parentElement.parentElement;
+            
+            if (remaining < 0) {
+                // Rouge si dépassement
+                container.style.background = 'rgba(239, 68, 68, 0.1)';
+                container.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                remainingElement.style.color = '#dc2626';
+                remainingElement.parentElement.innerHTML = `⚠️ Dépassement : <span id="paymentRemaining2" style="font-size: 1rem; font-weight: 800; color: #dc2626;">${formattedRemaining}</span>`;
+            } else if (remaining === 0) {
+                // Vert si montant exact
+                container.style.background = 'rgba(34, 197, 94, 0.1)';
+                container.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+                remainingElement.style.color = '#16a34a';
+                remainingElement.parentElement.innerHTML = `✅ Montant exact : <span id="paymentRemaining2" style="font-size: 1rem; font-weight: 800; color: #16a34a;">${formattedRemaining}</span>`;
+            } else {
+                // Vert normal si reste positif
+                container.style.background = 'rgba(5, 150, 105, 0.1)';
+                container.style.borderColor = 'rgba(5, 150, 105, 0.2)';
+                remainingElement.style.color = '#059669';
+                remainingElement.parentElement.innerHTML = `💡 Reste à payer : <span id="paymentRemaining2" style="font-size: 1rem; font-weight: 800; color: #059669;">${formattedRemaining}</span>`;
+            }
+        };
+
+
+        /**
+         * Récupérer le montant numérique (sans séparateurs)
+         */
+        const getPaymentAmountValue = () => {
+            const input = document.getElementById('paymentAmount');
+            if (!input) return 0;
+            
+            // Supprimer les espaces et convertir en nombre
+            const value = input.value.replace(/\s/g, '');
+            const number = parseInt(value);
+            
+            return isNaN(number) ? 0 : number;
+        };
+
+        // ========================================
+        // 🎯 INDICATEUR SCROLL TABLEAUX
+        // ========================================
+        const setupScrollIndicator = () => {
+            document.querySelectorAll('.table-container').forEach(container => {
+                // Vérifier si scrollable
+                if (container.scrollWidth > container.clientWidth) {
+                    container.classList.add('show-scroll-hint');
+                    
+                    // Masquer après 3 secondes
+                    setTimeout(() => {
+                        container.classList.remove('show-scroll-hint');
+                    }, 3000);
+                }
+                
+                // Masquer au premier scroll
+                container.addEventListener('scroll', function() {
+                    this.classList.remove('show-scroll-hint');
+                }, { passive: true, once: true });
+            });
+        };
+
+        // Appeler au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            setupScrollIndicator();
+        });
+
+        // Rappeler après resize
+        window.addEventListener('resize', () => {
+            setTimeout(setupScrollIndicator, 300);
+        });
     </script>
 </body>
 </html>
