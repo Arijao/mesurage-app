@@ -14,7 +14,7 @@
     <link rel="manifest" href="./manifest.json">
     
     <!-- Theme Color (couleur de la barre d'adresse sur mobile) -->
-    <meta name="theme-color" content="#1e40af">
+    <meta name="theme-color" content="#3e4357">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
     
     <!-- Description -->
@@ -28,7 +28,7 @@
     <link rel="apple-touch-icon" href="./icons/icon-180x180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
     <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180x180.png">
+    
     
     <!-- Apple Web App Config -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,17 +40,9 @@
          ============================================ -->
     
     <!-- Microsoft Tiles -->
-    <meta name="msapplication-TileColor" content="#1e40af">
-    <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#3e4357">
+    
     <meta name="msapplication-config" content="./browserconfig.xml">
-    
-    <!-- ============================================
-         FAVICONS
-         ============================================ -->
-    
-    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./icons/icon-16x16.png">
-    <link rel="shortcut icon" href="./icons/icon-32x32.png">
     
     <!-- ============================================
          ANDROID / CHROME
@@ -5355,11 +5347,71 @@
         // Afficher un message
         const showMessage = (elementId, message) => {
             const element = document.getElementById(elementId);
+            if (!element) {
+                console.warn(`⚠️ Élément ${elementId} introuvable`);
+                return;
+            }
             element.textContent = message;
             element.style.display = 'block';
             setTimeout(() => {
                 element.style.display = 'none';
             }, 3000);
+        };
+
+        /**
+         * Afficher un message toast flottant (pour PWA)
+         */
+        const showToast = (message, type = 'info', duration = 4000) => {
+            // Supprimer les anciens toasts
+            const oldToasts = document.querySelectorAll('.pwa-toast-message');
+            oldToasts.forEach(toast => toast.remove());
+            
+            // Créer le toast
+            const toast = document.createElement('div');
+            toast.className = 'pwa-toast-message';
+            
+            // Couleurs selon le type
+            const styles = {
+                success: { bg: 'rgba(5, 150, 105, 0.95)', border: '#059669', icon: '✅' },
+                error: { bg: 'rgba(220, 38, 38, 0.95)', border: '#dc2626', icon: '❌' },
+                info: { bg: 'rgba(59, 130, 246, 0.95)', border: '#3b82f6', icon: 'ℹ️' },
+                warning: { bg: 'rgba(245, 158, 11, 0.95)', border: '#f59e0b', icon: '⚠️' }
+            };
+            
+            const style = styles[type] || styles.info;
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10001;
+                background: ${style.bg};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 2px solid ${style.border};
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                font-weight: 600;
+                font-size: 0.95rem;
+                max-width: 400px;
+                animation: slideInRight 0.5s ease;
+                backdrop-filter: blur(10px);
+            `;
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.5rem;">${style.icon}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto-supprimer
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
         };
 
         // Exporter les données CSV
@@ -7740,7 +7792,7 @@
                 hideInstallButton();
                 
                 // Message de succès
-                showMessage('✅ Application installée avec succès !', 'success');
+                showToast('✅ Application installée avec succès !', 'success');
             });
         }
 
