@@ -1,11 +1,72 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pesage Vanille - Suivi quotidien</title>
+    
+    <!-- ============================================
+         PWA META TAGS
+         ============================================ -->
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Theme Color (couleur de la barre d'adresse sur mobile) -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
+    
+    <!-- Description -->
+    <meta name="description" content="Application de gestion des pesages et salaires pour la vanille - Fonctionne hors ligne">
+    
+    <!-- ============================================
+         APPLE iOS META TAGS
+         ============================================ -->
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="./icons/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180x180.png">
+    
+    <!-- Apple Web App Config -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pesage Vanille">
+    
+    <!-- ============================================
+         MICROSOFT META TAGS
+         ============================================ -->
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#1e40af">
+    <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
+    <meta name="msapplication-config" content="./browserconfig.xml">
+    
+    <!-- ============================================
+         FAVICONS
+         ============================================ -->
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icons/icon-16x16.png">
+    <link rel="shortcut icon" href="./icons/icon-32x32.png">
+    
+    <!-- ============================================
+         ANDROID / CHROME
+         ============================================ -->
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- ============================================
+          CSS
+         ============================================ -->
+    
     <link rel="stylesheet" href="styles.css">
+    
     <style>
+        /* Vos styles inline existants restent ici */
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         * {
