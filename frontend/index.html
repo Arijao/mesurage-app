@@ -1294,6 +1294,13 @@
             background: rgba(22, 163, 74, 0.08);
             border: 2px solid rgba(22, 163, 74, 0.2);
         }
+
+        /* Le nom reste toujours lisible : ces encarts gardent un fond clair
+           quel que soit le thème (clair/sombre), donc une couleur fixe et
+           foncée est nécessaire au lieu d'hériter de --text-primary */
+        .out-of-range-item strong {
+            color: #1e293b;
+        }
         .daily-quality-card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
             backdrop-filter: blur(10px);
@@ -1360,9 +1367,9 @@
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
 
-        /* Labels noirs */
+        /* Labels clairs (lisibles sur fond sombre) */
         [data-theme="dark"] .salary-row span:first-child {
-            color: #111827 !important;  /* noir/gris anthracite profond */
+            color: #f1f5f9 !important;  /* blanc cassé, lisible sur fond sombre */
             font-weight: 700;
         }
 
@@ -4033,6 +4040,18 @@
             dropdown.style.display = 'block';
         };
 
+        // Échappe les caractères spéciaux (apostrophes, guillemets, backticks, backslashes)
+        // pour permettre l'insertion sûre d'une valeur dans un attribut onclick="..."
+        const escapeForJsAttr = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/`/g, '\\`')
+                .replace(/"/g, '&quot;')
+                .replace(/\r?\n/g, '\\n');
+        };
+
         // Afficher les options d'employés
         const displayEmployeeOptions = (employees) => {
             const dropdown = document.getElementById('employeeDropdown');
@@ -4041,7 +4060,7 @@
                 dropdown.innerHTML = '<div class="employee-option no-results">Aucun employé trouvé</div>';
             } else {
                 dropdown.innerHTML = employees.map((employee, index) => 
-                    `<div class="employee-option" onclick="selectEmployee('${employee.id}', '${employee.name}', ${index})" 
+                    `<div class="employee-option" onclick="selectEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}', ${index})" 
                           data-index="${index}">
                         ${employee.name}
                     </div>`
@@ -4124,11 +4143,11 @@
                         <td>${new Date(employee.createdAt).toLocaleDateString('fr-FR')}</td>
                         <td>${employeeWeights.length}</td>
                         <td>
-                            <button class="edit-btn" onclick="editEmployeeNote('${employee.id}', '${employee.name}', \`${employee.alertNote || ''}\`)">
+                            <button class="edit-btn" onclick="editEmployeeNote('${employee.id}', '${escapeForJsAttr(employee.name)}', \`${escapeForJsAttr(employee.alertNote || '')}\`)">
                                 📝 Note
                             </button>
-                            <button class="edit-btn" onclick="editEmployee('${employee.id}', '${employee.name}')">✏️ Modifier</button>
-                            <button class="delete-btn" onclick="deleteEmployee('${employee.id}', '${employee.name}')">🗑️ Supprimer</button>
+                            <button class="edit-btn" onclick="editEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}')">✏️ Modifier</button>
+                            <button class="delete-btn" onclick="deleteEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}')">🗑️ Supprimer</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -4877,7 +4896,7 @@
                         <div class="stat-item" style="cursor: pointer; transition: all 0.2s ease;" 
                              onmouseover="this.style.background='rgba(5, 150, 105, 0.05)'" 
                              onmouseout="this.style.background='transparent'"
-                             onclick="openEmployeeWeightsModal('${employee.id}', '${employee.name}')">
+                             onclick="openEmployeeWeightsModal('${employee.id}', '${escapeForJsAttr(employee.name)}')">
                             <span class="stat-label">⚖️ Poids Total</span>
                             <span class="stat-value" style="color: #059669; display: flex; align-items: center; gap: 8px;">
                                 ${totalWeight.toFixed(1)} kg
@@ -4911,7 +4930,7 @@
                         </div>
                     </div>
 
-                    <button onclick="openPaymentModal('${employee.id}', '${employee.name}', ${reste}, ${salary}, ${totalPaid})"
+                    <button onclick="openPaymentModal('${employee.id}', '${escapeForJsAttr(employee.name)}', ${reste}, ${salary}, ${totalPaid})"
                             class="btn success" style="width: 100%; margin-top: 12px;">
                         💸 Effectuer un Paiement
                     </button>
@@ -5640,7 +5659,7 @@
                 // Ajouter une option "Tous les employés" au début
                 const allOption = '<div class="employee-option" onclick="selectFilterEmployee(\'\', \'Tous les employés\', -1)">Tous les employés</div>';
                 const employeeOptions = allEmployees.map((employee, index) => 
-                    `<div class="employee-option" onclick="selectFilterEmployee(${employee.id}, '${employee.name}', ${index})" 
+                    `<div class="employee-option" onclick="selectFilterEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}', ${index})" 
                         data-index="${index}">
                         ${employee.name}
                     </div>`
@@ -5688,7 +5707,7 @@
             } else {
                 const allOption = '<div class="employee-option" onclick="selectFilterEmployee(\'\', \'Tous les employés\', -1)">Tous les employés</div>';
                 const employeeOptions = employees.map((employee, index) => 
-                    `<div class="employee-option" onclick="selectFilterEmployee(${employee.id}, '${employee.name}', ${index})" 
+                    `<div class="employee-option" onclick="selectFilterEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}', ${index})" 
                         data-index="${index}">
                         ${employee.name}
                     </div>`
@@ -5717,34 +5736,11 @@
 
         // Filtrer par employé sélectionné
         const filterBySelectedEmployee = (employeeName) => {
-            const transaction = db.transaction(['weights', 'employees'], 'readonly');
-            const weightStore = transaction.objectStore('weights');
-            const employeeStore = transaction.objectStore('employees');
-            
-            const request = weightStore.getAll();
-            
-            request.onsuccess = () => {
-                const weights = request.result;
-                const employeeRequests = [];
-                
-                weights.forEach(weight => {
-                    const empRequest = employeeStore.get(weight.employeeId);
-                    employeeRequests.push(new Promise((resolve) => {
-                        empRequest.onsuccess = () => {
-                            weight.employeeName = empRequest.result ? empRequest.result.name : 'Inconnu';
-                            resolve();
-                        };
-                    }));
-                });
-                
-                Promise.all(employeeRequests).then(() => {
-                    const filteredWeights = weights.filter(w => 
-                        w.employeeName.toLowerCase().includes(employeeName.toLowerCase())
-                    );
-                    displayWeights(filteredWeights.reverse());
-                    updateSearchStats(filteredWeights);
-                });
-            };
+            const filteredWeights = allWeights.filter(w =>
+                w.employeeName.toLowerCase().includes(employeeName.toLowerCase())
+            );
+            displayWeights(filteredWeights);
+            updateSearchStats(filteredWeights);
         };
 
         // ⭐ NOUVEAU: Variables pour modal détail poids
@@ -5757,34 +5753,25 @@
         const openEmployeeWeightsModal = (employeeId, employeeName) => {
             currentModalEmployeeId = employeeId;
             currentModalEmployeeName = employeeName;
-            
+
             document.getElementById('weightsModalEmployeeName').textContent = employeeName;
-            
-            const transaction = db.transaction(['weights'], 'readonly');
-            const store = transaction.objectStore('weights');
-            const request = store.getAll();
-            
-            request.onsuccess = () => {
-                allModalWeights = request.result.filter(w => w.employeeId === employeeId);
-                
-                // Trier par date décroissante
-                allModalWeights.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                // Remplir le filtre qualités
-                const qualities = [...new Set(allModalWeights.map(w => getQualityName(w)))];
-                const qualityFilter = document.getElementById('modalQualityFilter');
-                qualityFilter.innerHTML = '<option value="">Toutes les qualités</option>';
-                qualities.forEach(q => {
-                    qualityFilter.innerHTML += `<option value="${q}">${q}</option>`;
-                });
-                
-                // Afficher tout par défaut
-                filteredModalWeights = [...allModalWeights];
-                displayModalWeights();
-                updateModalStats();
-                
-                document.getElementById('employeeWeightsModal').style.display = 'block';
-            };
+
+            allModalWeights = allWeights.filter(w => w.employeeId === employeeId);
+
+            allModalWeights.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const qualities = [...new Set(allModalWeights.map(w => getQualityName(w)))];
+            const qualityFilter = document.getElementById('modalQualityFilter');
+            qualityFilter.innerHTML = '<option value="">Toutes les qualités</option>';
+            qualities.forEach(q => {
+                qualityFilter.innerHTML += `<option value="${q}">${q}</option>`;
+            });
+
+            filteredModalWeights = [...allModalWeights];
+            displayModalWeights();
+            updateModalStats();
+
+            document.getElementById('employeeWeightsModal').style.display = 'block';
         };
 
         // ⭐ NOUVEAU: Afficher les poids dans le modal
@@ -5845,8 +5832,8 @@
                     <td style="font-weight: 600; color: ${textColor};">${price.toLocaleString('fr-FR')} Ar</td>
                     <td style="font-weight: 700; color: #047857;">${salary.toLocaleString('fr-FR')} Ar</td>
                     <td>
-                        <button class="edit-btn" onclick="editWeight(${w.id})" style="padding: 6px 12px; font-size: 0.8rem;">✏️</button>
-                        <button class="delete-btn" onclick="deleteWeightFromModal(${w.id})" style="padding: 6px 12px; font-size: 0.8rem;">🗑️</button>
+                        <button class="edit-btn" onclick="editWeight('${w.id}')" style="padding: 6px 12px; font-size: 0.8rem;">✏️</button>
+                        <button class="delete-btn" onclick="deleteWeightFromModal('${w.id}')" style="padding: 6px 12px; font-size: 0.8rem;">🗑️</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -5912,24 +5899,22 @@
         };
 
         // ⭐ NOUVEAU: Supprimer poids depuis modal (avec refresh)
-        const deleteWeightFromModal = (id) => {
+        const deleteWeightFromModal = async (id) => {
             if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce pesage?')) return;
-            
-            const transaction = db.transaction(['weights'], 'readwrite');
-            const store = transaction.objectStore('weights');
-            
-            const request = store.delete(id);
-            request.onsuccess = () => {
-                // Recharger les données du modal
+
+            try {
+                await apiFetch(`/weighings/${id}`, { method: 'DELETE' });
+                await loadWeights();
+
                 openEmployeeWeightsModal(currentModalEmployeeId, currentModalEmployeeName);
-                
-                // Mettre à jour les autres vues
-                loadWeights();
+
                 updateStats();
                 updateSalaryStats();
                 updateEmployeeStats();
                 loadEmployeeManagement();
-            };
+            } catch (err) {
+                alert('❌ Erreur lors de la suppression!');
+            }
         };
 
         // ⭐ NOUVEAU: Exporter CSV pour cet employé uniquement
@@ -6286,30 +6271,17 @@
         // -------------------------------
         //  BONUS: Reprendre dernière saisie
         const fillLastEntry = () => {
-            const transaction = db.transaction(['weights'], 'readonly');
-            const store = transaction.objectStore('weights');
-            const request = store.getAll();
-            
-            request.onsuccess = () => {
-                const weights = request.result;
-                if (weights.length === 0) {
-                    alert('Aucun pesage précédent trouvé!');
-                    return;
-                }
-                
-                // Prendre le dernier pesage
-                const lastWeight = weights[weights.length - 1];
-                
-                // Extraire qualité et prix
-                if (lastWeight.note && lastWeight.note.includes('|')) {
-                    const parts = lastWeight.note.split('|');
-                    document.getElementById('qualityName').value = parts[0];
-                    document.getElementById('qualityPrice').value = parseFloat(parts[1]).toLocaleString('fr-FR');
-                    alert('✅ Qualité et prix récupérés!');
-                } else {
-                    alert('⚠️ Le dernier pesage n\'a pas de qualité définie');
-                }
-            };
+            if (allWeights.length === 0) {
+                alert('Aucun pesage précédent trouvé!');
+                return;
+            }
+
+            // allWeights est trié du plus récent au plus ancien (le backend trie déjà ainsi)
+            const lastWeight = allWeights[0];
+
+            document.getElementById('qualityName').value = lastWeight.qualityName;
+            document.getElementById('qualityPrice').value = lastWeight.pricePerKg.toLocaleString('fr-FR');
+            alert('✅ Qualité et prix récupérés!');
         };
 
         //  NOUVEAU: Mettre à jour les statistiques quotidiennes par qualité
@@ -6710,7 +6682,7 @@
                 dropdown.innerHTML = '<div class="employee-option no-results">Aucun employé trouvé</div>';
             } else {
                 dropdown.innerHTML = employees.map((employee) => 
-                    `<div class="employee-option" onclick="selectDailyStatsEmployee('${employee.id}', '${employee.name}')">
+                    `<div class="employee-option" onclick="selectDailyStatsEmployee('${employee.id}', '${escapeForJsAttr(employee.name)}')">
                         ${employee.name}
                     </div>`
                 ).join('');
