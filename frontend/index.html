@@ -4164,17 +4164,11 @@
 
         // Charger la gestion des employés
         const loadEmployeeManagement = () => {
-            const transaction = db.transaction(['weights'], 'readonly');
-            const weightStore = transaction.objectStore('weights');
-            const weightRequest = weightStore.getAll();
+            const tbody = document.getElementById('employeesTableBody');
+            tbody.innerHTML = '';
 
-            weightRequest.onsuccess = () => {
-                const weights = weightRequest.result;
-                const tbody = document.getElementById('employeesTableBody');
-                tbody.innerHTML = '';
-
-                allEmployees.forEach(employee => {
-                    const employeeWeights = weights.filter(w => w.employeeId === employee.id);
+            allEmployees.forEach(employee => {
+                const employeeWeights = allWeights.filter(w => w.employeeId === employee.id);
                     const row = document.createElement('tr');
 
                     // Badge alerte si note existe
@@ -4198,7 +4192,6 @@
                     `;
                     tbody.appendChild(row);
                 });
-            };
         };
 
         function filterManageEmployees() {
