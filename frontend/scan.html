@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan - Poste opérateur</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 { font-size: 1.2rem; margin-bottom: 16px; }
+
+    #scanner-view {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+    video { width: 100%; display: block; }
+    #scan-hint {
+      text-align: center;
+      color: #94a3b8;
+      margin-top: 14px;
+      font-size: 0.9rem;
+    }
+    #scan-error {
+      color: #f87171;
+      text-align: center;
+      margin-top: 14px;
+      display: none;
+    }
+
+    #employee-panel {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    #employee-panel h2 { font-size: 1.3rem; margin-bottom: 6px; }
+    #employee-balance { color: #94a3b8; margin-bottom: 20px; }
+    #employee-balance strong { color: #f1f5f9; }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .action-buttons button {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #btn-weighing { background: #3b82f6; color: white; }
+    #btn-payment { background: #10b981; color: white; }
+    #btn-rescan {
+      background: transparent;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .modal-card h2 { margin-bottom: 4px; }
+    .modal-subtitle { color: #94a3b8; margin-bottom: 16px; font-size: 0.9rem; }
+    .modal-card label {
+      display: block;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    .modal-card input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(100, 116, 139, 0.3);
+      background: rgba(15, 23, 42, 0.6);
+      color: #f1f5f9;
+      font-size: 1rem;
+    }
+    .modal-total {
+      margin-top: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .modal-error {
+      color: #f87171;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-primary {
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: #3b82f6;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>📷 Poste de scan — Pesage / Paiement</h1>
+
+  <div id="scanner-view">
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+  <div id="scan-hint">Présentez le badge QR de l'employé devant la caméra</div>
+  <div id="scan-error"></div>
+
+  <div id="employee-panel">
+    <h2 id="employee-name"></h2>
+    <div id="employee-balance"></div>
+    <div class="action-buttons">
+      <button id="btn-weighing">⚖️ Nouveau pesage</button>
+      <button id="btn-payment">💵 Paiement / avance</button>
+      <button id="btn-rescan">← Scanner un autre badge</button>
+    </div>
+  </div>
+
+  <div id="weighing-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>⚖️ Nouveau pesage</h2>
+      <p id="weighing-employee-name" class="modal-subtitle"></p>
+
+      <label>Poids (kg)</label>
+      <input type="number" id="weighing-weight" step="0.1" min="0" inputmode="decimal">
+
+      <label>Qualité</label>
+      <input type="text" id="weighing-quality" list="quality-options" placeholder="ex: Noire">
+      <datalist id="quality-options">
+        <option value="Noire">
+        <option value="Rouge">
+        <option value="Qualité A">
+      </datalist>
+
+      <label>Prix / kg (Ar)</label>
+      <input type="number" id="weighing-price" step="1" min="0">
+
+      <div id="weighing-total" class="modal-total"></div>
+      <div id="weighing-error" class="modal-error"></div>
+
+      <div class="modal-actions">
+        <button id="weighing-confirm" class="btn-primary">Valider le pesage</button>
+        <button id="weighing-cancel" class="btn-secondary">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="payment-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>💵 Paiement / avance</h2>
+      <p id="payment-employee-name" class="modal-subtitle"></p>
+      <p id="payment-employee-balance" class="modal-subtitle"></p>
+
+      <label>Montant (Ar)</label>
+      <input type="number" id="payment-amount" step="1" min="0">
+
+      <label>Note (optionnel)</label>
+      <input type="text" id="payment-note" placeholder="ex: avance sur récolte">
+
+      <div id="payment-error" class="modal-error"></div>
+
+      <div class="modal-actions">
+        <button id="payment-confirm" class="btn-primary">Valider le paiement</button>
+        <button id="payment-cancel" class="btn-secondary">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/services/api.js"></script>
+  <script>
+    // Garde d'authentification (identique à index.html)
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    const video = document.getElementById('video');
+    const scanHint = document.getElementById('scan-hint');
+    const scanError = document.getElementById('scan-error');
+    const scannerView = document.getElementById('scanner-view');
+    const employeePanel = document.getElementById('employee-panel');
+
+    let scanning = true;
+
+    async function startScanner() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+        });
+        video.srcObject = stream;
+        await video.play();
+      } catch (err) {
+        scanError.textContent = 'Impossible d\'accéder à la caméra : ' + err.message;
+        scanError.style.display = 'block';
+        return;
+      }
+
+      if (!('BarcodeDetector' in window)) {
+        scanError.textContent = 'Ce navigateur ne supporte pas le scan QR natif (Chrome Android requis).';
+        scanError.style.display = 'block';
+        return;
+      }
+
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+      const loop = async () => {
+        if (!scanning) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length > 0) {
+            scanning = false;
+            onEmployeeScanned(codes[0].rawValue);
+            return;
+          }
+        } catch (e) {
+          // erreur de détection ponctuelle, on continue la boucle
+        }
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+
+    async function onEmployeeScanned(employeeId) {
+      scanHint.textContent = 'Chargement...';
+      try {
+        const summary = await apiFetch(`/employees/${employeeId}/summary`);
+        showEmployeeActions(summary);
+      } catch (err) {
+        scanError.textContent = 'Badge non reconnu ou erreur serveur : ' + err.message;
+        scanError.style.display = 'block';
+        setTimeout(() => {
+          scanError.style.display = 'none';
+          scanHint.textContent = 'Présentez le badge QR de l\'employé devant la caméra';
+          scanning = true;
+          startDetectionLoopOnly();
+        }, 2000);
+      }
+    }
+
+    function startDetectionLoopOnly() {
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const loop = async () => {
+        if (!scanning) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length > 0) {
+            scanning = false;
+            onEmployeeScanned(codes[0].rawValue);
+            return;
+          }
+        } catch (e) {}
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+
+    function showEmployeeActions(summary) {
+      scannerView.style.display = 'none';
+      scanHint.style.display = 'none';
+      employeePanel.style.display = 'block';
+      document.getElementById('employee-name').textContent = summary.employee.name;
+      document.getElementById('employee-balance').innerHTML =
+        `Solde : <strong>${summary.balance.toLocaleString('fr-FR')} Ar</strong>`;
+      document.getElementById('btn-weighing').onclick = () => openWeighingModal(summary);
+      document.getElementById('btn-payment').onclick = () => openPaymentModal(summary);
+      document.getElementById('btn-rescan').onclick = () => {
+        employeePanel.style.display = 'none';
+        scannerView.style.display = 'block';
+        scanHint.style.display = 'block';
+        scanning = true;
+        startDetectionLoopOnly();
+      };
+    }
+
+    async function openWeighingModal(summary) {
+      const modal = document.getElementById('weighing-modal');
+      document.getElementById('weighing-employee-name').textContent = summary.employee.name;
+      document.getElementById('weighing-weight').value = '';
+      document.getElementById('weighing-quality').value = '';
+      document.getElementById('weighing-total').textContent = '';
+      document.getElementById('weighing-error').style.display = 'none';
+
+      try {
+        const price = await apiFetch('/prices/current');
+        document.getElementById('weighing-price').value = price.pricePerKg;
+      } catch (e) {
+        document.getElementById('weighing-price').value = '';
+      }
+
+      const weightEl = document.getElementById('weighing-weight');
+      const priceEl = document.getElementById('weighing-price');
+      const totalEl = document.getElementById('weighing-total');
+      const updateTotal = () => {
+        const w = parseFloat(weightEl.value) || 0;
+        const p = parseFloat(priceEl.value) || 0;
+        totalEl.textContent = w && p ? `Total : ${(w * p).toLocaleString('fr-FR')} Ar` : '';
+      };
+      weightEl.oninput = updateTotal;
+      priceEl.oninput = updateTotal;
+
+      document.getElementById('weighing-cancel').onclick = () => modal.classList.remove('active');
+
+      document.getElementById('weighing-confirm').onclick = async () => {
+        const errorEl = document.getElementById('weighing-error');
+        errorEl.style.display = 'none';
+        const weightKg = parseFloat(weightEl.value);
+        const qualityName = document.getElementById('weighing-quality').value.trim();
+        const pricePerKg = parseFloat(priceEl.value);
+
+        if (!weightKg || weightKg <= 0 || !qualityName || !pricePerKg || pricePerKg <= 0) {
+          errorEl.textContent = 'Poids, qualité et prix sont requis.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        try {
+          await apiFetch('/weighings', {
+            method: 'POST',
+            body: JSON.stringify({
+              employeeId: summary.employee.id,
+              weightKg,
+              qualityName,
+              pricePerKg,
+              weighedAt: new Date().toISOString(),
+            }),
+          });
+          modal.classList.remove('active');
+          document.getElementById('btn-rescan').click();
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        }
+      };
+
+      modal.classList.add('active');
+    }
+
+    function openPaymentModal(summary) {
+      const modal = document.getElementById('payment-modal');
+      document.getElementById('payment-employee-name').textContent = summary.employee.name;
+      document.getElementById('payment-employee-balance').innerHTML =
+        `Solde actuel : <strong>${summary.balance.toLocaleString('fr-FR')} Ar</strong>`;
+      document.getElementById('payment-amount').value = '';
+      document.getElementById('payment-note').value = '';
+      document.getElementById('payment-error').style.display = 'none';
+
+      document.getElementById('payment-cancel').onclick = () => modal.classList.remove('active');
+
+      document.getElementById('payment-confirm').onclick = async () => {
+        const errorEl = document.getElementById('payment-error');
+        errorEl.style.display = 'none';
+        const amount = parseFloat(document.getElementById('payment-amount').value);
+        const note = document.getElementById('payment-note').value.trim();
+
+        if (!amount || amount <= 0) {
+          errorEl.textContent = 'Le montant doit être supérieur à 0.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        try {
+          await apiFetch('/payments', {
+            method: 'POST',
+            body: JSON.stringify({
+              employeeId: summary.employee.id,
+              amount,
+              paidAt: new Date().toISOString(),
+              note: note || undefined,
+            }),
+          });
+          modal.classList.remove('active');
+          document.getElementById('btn-rescan').click();
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        }
+      };
+
+      modal.classList.add('active');
+    }
+
+    startScanner();
+  </script>
+</body>
+</html>

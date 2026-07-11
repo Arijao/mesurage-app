@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badges QR - Employés</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 24px;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-back {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(100, 116, 139, 0.3);
+    }
+    .btn-back:hover { color: #f1f5f9; border-color: rgba(148, 163, 184, 0.5); }
+    .toolbar h1 { font-size: 1.3rem; }
+    .toolbar button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #status { color: #94a3b8; margin-bottom: 16px; }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .badge-card {
+      background: white;
+      color: #0f172a;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      break-inside: avoid;
+    }
+    .badge-qr {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .badge-name {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .badge-phone {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .toolbar { display: none; }
+      #status { display: none; }
+      .badge-grid { gap: 12px; }
+      .badge-card { border: 1px solid #cbd5e1; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <a href="index.html" class="btn-back" title="Retour au dashboard">← Retour</a>
+      <h1>🏷️ Badges QR — Employés</h1>
+    </div>
+    <button onclick="window.print()">Imprimer</button>
+  </div>
+  <div id="status">Chargement des employés...</div>
+  <div class="badge-grid" id="badge-grid"></div>
+
+  <script src="src/services/qrcode.min.js"></script>
+  <script src="src/services/api.js"></script>
+  <script>
+    // Garde d'authentification (identique à index.html)
+    if (!localStorage.getItem('token')) {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    async function loadBadges() {
+      const statusEl = document.getElementById('status');
+      const grid = document.getElementById('badge-grid');
+      try {
+        const employees = await apiFetch('/employees');
+        statusEl.textContent = `${employees.length} employé(s)`;
+
+        employees.forEach((emp) => {
+          const card = document.createElement('div');
+          card.className = 'badge-card';
+
+          const qrDiv = document.createElement('div');
+          qrDiv.className = 'badge-qr';
+          card.appendChild(qrDiv);
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'badge-name';
+          nameDiv.textContent = emp.name;
+          card.appendChild(nameDiv);
+
+          if (emp.phone) {
+            const phoneDiv = document.createElement('div');
+            phoneDiv.className = 'badge-phone';
+            phoneDiv.textContent = emp.phone;
+            card.appendChild(phoneDiv);
+          }
+
+          grid.appendChild(card);
+
+          // QR encode uniquement l'id (pas d'URL de serveur)
+          new QRCode(qrDiv, {
+            text: emp.id,
+            width: 160,
+            height: 160,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M,
+          });
+        });
+      } catch (err) {
+        statusEl.textContent = 'Erreur : ' + err.message;
+      }
+    }
+
+    loadBadges();
+  </script>
+</body>
+</html>
