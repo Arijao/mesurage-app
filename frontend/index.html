@@ -2480,6 +2480,10 @@
                         <span class="nav-icon-sub">🔍</span>
                         <span class="nav-text">Vérification BDD</span>
                     </a>
+                    <a href="badges.html" class="nav-item">
+                        <span class="nav-icon-sub">🏷️</span>
+                        <span class="nav-text">Badges QR Employés</span>
+                    </a>
                 </div>
             </div>
         </nav>
@@ -3444,6 +3448,13 @@
     <script src="src/services/api.js"></script>
 
     <script>
+        // Garde d'authentification : redirige vers login.html si aucun token
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        }
+    </script>
+
+    <script>
         /* ========================================
         🔧 VARIABLES GLOBALES SIDEBAR
         ======================================== */
@@ -3841,6 +3852,46 @@
         /**
          * Initialiser la base de données IndexedDB
          */
+        /**
+         * Recharge toutes les données affichées (employés, pesages, paiements, stats).
+         * Fonction globale : appelée au chargement initial (via initDB) ET à chaque
+         * notification WebSocket temps réel (via connectWebSocket, plus bas).
+         */
+        async function refreshAllData() {
+            try {
+                await loadDefaultPrice();
+            } catch (err) {
+                console.error('❌ Erreur chargement prix par défaut:', err.message);
+            }
+            try {
+                await loadAllEmployees();
+            } catch (err) {
+                console.error('❌ Erreur chargement employés:', err.message);
+            }
+            try {
+                await loadPayments();
+            } catch (err) {
+                console.error('❌ Erreur chargement paiements:', err.message);
+            }
+            try {
+                await loadWeights();
+            } catch (err) {
+                console.error('❌ Erreur chargement pesées:', err.message);
+            }
+            updateStats();
+            updateSalaryStats();
+            updateSalaryByQuality();
+            loadEmployeeManagement();
+            updateSalaryDetailsTable();
+            updateDailyQualityStats();
+
+            setTimeout(() => {
+                updateEmployeeStats();
+            }, 1000);
+
+            console.log('🎉 Toutes les données ont été chargées');
+        }
+
         const initDB = () => {
             const request = indexedDB.open(dbName, dbVersion);
             
@@ -3852,40 +3903,7 @@
             request.onsuccess = async (event) => {
                 db = event.target.result;
                 console.log('✅ Base de données initialisée avec succès');
-                
-                // ✅ ORDRE D'INITIALISATION CORRIGÉ (chaque chargement est isolé : une erreur sur l'un n'empêche pas les autres)
-                try {
-                    await loadDefaultPrice();     // 1. Charger le prix par défaut (API)
-                } catch (err) {
-                    console.error('❌ Erreur chargement prix par défaut:', err.message);
-                }
-                try {
-                    await loadAllEmployees();     // 2. Charger les employés (API)
-                } catch (err) {
-                    console.error('❌ Erreur chargement employés:', err.message);
-                }
-                try {
-                    await loadPayments();         // 2bis. Charger les paiements
-                } catch (err) {
-                    console.error('❌ Erreur chargement paiements:', err.message);
-                }
-                try {
-                    await loadWeights();          // 3. Charger les pesées
-                } catch (err) {
-                    console.error('❌ Erreur chargement pesées:', err.message);
-                }                // 3. Charger les pesages
-                updateStats();                // 4. Mettre à jour stats générales
-                updateSalaryStats();          // 5. ✅ AJOUT : Stats salaires
-                updateSalaryByQuality();      // 6. ✅ AJOUT : Répartition par qualité
-                loadEmployeeManagement();     // 7. Gestion employés
-                updateSalaryDetailsTable();   // 8. ✅ AJOUT : Détails salaires
-                
-                // Délai pour les stats employés (chargement lourd)
-                setTimeout(() => {
-                    updateEmployeeStats();
-                }, 1000);
-                
-                console.log('🎉 Toutes les données ont été chargées');
+                await refreshAllData();
             };
             
             request.onupgradeneeded = (event) => {
@@ -3920,7 +3938,35 @@
             };
         };
 
- 
+        /**
+         * Connexion WebSocket temps réel : reçoit un signal après chaque
+         * pesage/paiement créé (y compris depuis le poste de scan HTTPS)
+         * et rappelle refreshAllData() — pas de re-chargement de page.
+         */
+        function connectWebSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socket = new WebSocket(`${wsProtocol}//${window.location.host}`);
+
+            socket.addEventListener('message', (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'update') {
+                        console.log('🔄 Mise à jour reçue via WebSocket:', data);
+                        refreshAllData();
+                    }
+                } catch (err) {
+                    console.error('❌ Erreur message WebSocket:', err.message);
+                }
+            });
+
+            socket.addEventListener('close', () => {
+                console.warn('🔌 WebSocket déconnecté — reconnexion dans 3s');
+                setTimeout(connectWebSocket, 3000);
+            });
+
+            socket.addEventListener('error', () => socket.close());
+        }
+
         // ============================================
         // VALIDATION EMPLOYÉ - NE PAS MODIFIER
         // ============================================
@@ -5454,6 +5500,9 @@
             
             // Initialiser la base de données
             initDB();
+
+            // Connexion WebSocket pour les mises à jour temps réel
+            connectWebSocket();
 
             // DÉFINIR D'ABORD TOUTES LES FONCTIONS INTERNES
             
@@ -7300,7 +7349,13 @@
         ======================================== */
 
         // Vérifier si le navigateur supporte les Service Workers
-        if ('serviceWorker' in navigator) {
+        // Service Worker : uniquement sur l'origine HTTP principale (localhost:3000).
+        // En HTTPS (poste de scan LAN), le certificat auto-signé n'est pas installé dans le
+        // magasin de confiance du système : Chrome bloque l'enregistrement du Service Worker
+        // (SecurityError), même après acceptation manuelle de l'avertissement.
+        // Sans conséquence ici : ce poste est toujours connecté au serveur local, pas besoin
+        // de mode hors-ligne.
+        if ('serviceWorker' in navigator && window.location.protocol === 'http:') {
             window.addEventListener('load', () => {
                 registerServiceWorker();
                 checkForUpdates();
