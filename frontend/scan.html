@@ -19,6 +19,7 @@
     h1 { font-size: 1.2rem; margin-bottom: 16px; }
 
     #scanner-view {
+      display: none;
       width: 100%;
       max-width: 420px;
       border-radius: 16px;
@@ -28,10 +29,27 @@
     }
     video { width: 100%; display: block; }
     #scan-hint {
+      display: none;
       text-align: center;
       color: #94a3b8;
       margin-top: 14px;
       font-size: 0.9rem;
+    }
+    #start-panel {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    #start-panel button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #3b82f6;
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
     }
     #scan-error {
       color: #f87171;
@@ -152,6 +170,9 @@
 <body>
   <h1>📷 Poste de scan — Pesage / Paiement</h1>
 
+  <div id="start-panel">
+    <button id="btn-start-scan">📷 Démarrer le scan</button>
+  </div>
   <div id="scanner-view">
     <video id="video" autoplay playsinline muted></video>
   </div>
@@ -230,14 +251,17 @@
     const scanError = document.getElementById('scan-error');
     const scannerView = document.getElementById('scanner-view');
     const employeePanel = document.getElementById('employee-panel');
+    const startPanel = document.getElementById('start-panel');
 
     let scanning = true;
+    let currentStream = null;
 
     async function startScanner() {
-      try {
+    try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
+        video: { facingMode: 'environment' },
         });
+        currentStream = stream;
         video.srcObject = stream;
         await video.play();
       } catch (err) {
@@ -305,7 +329,16 @@
       loop();
     }
 
+    function stopCamera() {
+      if (currentStream) {
+          currentStream.getTracks().forEach((track) => track.stop());
+          currentStream = null;
+      }
+      video.srcObject = null;
+    }
+
     function showEmployeeActions(summary) {
+      stopCamera();
       scannerView.style.display = 'none';
       scanHint.style.display = 'none';
       employeePanel.style.display = 'block';
@@ -316,11 +349,8 @@
       document.getElementById('btn-payment').onclick = () => openPaymentModal(summary);
       document.getElementById('btn-rescan').onclick = () => {
         employeePanel.style.display = 'none';
-        scannerView.style.display = 'block';
-        scanHint.style.display = 'block';
-        scanning = true;
-        startDetectionLoopOnly();
-      };
+        startPanel.style.display = 'block';
+     };
     }
 
     async function openWeighingModal(summary) {
@@ -430,7 +460,13 @@
       modal.classList.add('active');
     }
 
-    startScanner();
+    document.getElementById('btn-start-scan').onclick = () => {
+      startPanel.style.display = 'none';
+      scannerView.style.display = 'block';
+      scanHint.style.display = 'block';
+      scanning = true;
+      startScanner();
+    };
   </script>
 </body>
 </html>
