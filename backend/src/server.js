@@ -9,6 +9,7 @@ const employeesRoutes = require("./routes/employees.routes");
 const weighingsRoutes = require("./routes/weighings.routes");
 const paymentsRoutes = require("./routes/payments.routes");
 const pricesRoutes = require("./routes/prices.routes");
+const adminRoutes = require("./routes/admin.routes");
 const { attachToServer } = require("./services/ws");
 
 const app = express();
@@ -20,6 +21,7 @@ app.use("/api/employees", employeesRoutes);
 app.use("/api/weighings", weighingsRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/prices", pricesRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 

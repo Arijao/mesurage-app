@@ -9,11 +9,11 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { name, phone } = req.body;
+  const { name, phone, alertNote } = req.body;
   if (!name) {
     return res.status(400).json({ error: "Champ requis: name" });
   }
-  const employee = await employeesService.createEmployee({ name, phone });
+  const employee = await employeesService.createEmployee({ name, phone, alertNote });
   res.status(201).json(employee);
 });
 
@@ -37,6 +37,11 @@ router.patch("/:id", requireAuth, async (req, res) => {
 
 router.delete("/:id", requireAuth, async (req, res) => {
   await employeesService.deleteEmployee(req.params.id);
+  res.status(204).send();
+});
+
+router.delete("/", requireAuth, async (req, res) => {
+  await employeesService.deleteAllEmployees();
   res.status(204).send();
 });
 

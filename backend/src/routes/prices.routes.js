@@ -8,13 +8,23 @@ router.get("/current", requireAuth, async (req, res) => {
   res.json(price);
 });
 
+router.get("/", requireAuth, async (req, res) => {
+  const prices = await pricesService.listPrices();
+  res.json(prices);
+});
+
 router.post("/", requireAuth, async (req, res) => {
-  const { pricePerKg } = req.body;
+  const { pricePerKg, effectiveAt } = req.body;
   if (!pricePerKg) {
     return res.status(400).json({ error: "Champ requis: pricePerKg" });
   }
-  const price = await pricesService.createPrice({ pricePerKg });
+  const price = await pricesService.createPrice({ pricePerKg, effectiveAt });
   res.status(201).json(price);
+});
+
+router.delete("/", requireAuth, async (req, res) => {
+  await pricesService.deleteAllPrices();
+  res.status(204).send();
 });
 
 module.exports = router;

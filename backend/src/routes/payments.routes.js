@@ -14,7 +14,7 @@ router.post("/", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "Champs requis: employeeId, amount, paidAt" });
   }
   const payment = await paymentsService.createPayment({ employeeId, amount, paidAt, note });
-  broadcast("update", { entity: "payment", action: "create" });
+  broadcast("update", { entity: "payment", action: "create", employeeId: payment.employeeId });
   res.status(201).json(payment);
 });
 router.patch("/:id", requireAuth, async (req, res) => {

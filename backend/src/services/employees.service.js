@@ -43,6 +43,10 @@ async function deleteEmployee(id) {
   return prisma.employee.delete({ where: { id } });
 }
 
+async function deleteAllEmployees() {
+  return prisma.employee.deleteMany({});
+}
+
 module.exports = {
   createEmployee,
   listEmployees,
@@ -50,4 +54,5 @@ module.exports = {
   updateEmployee,
   getSummary,
   deleteEmployee,
+  deleteAllEmployees,
 };

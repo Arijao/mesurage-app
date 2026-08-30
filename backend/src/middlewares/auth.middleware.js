@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const prisma = require("../config/db");
 
 function requireAuth(req, res, next) {
   const header = req.headers.authorization;
@@ -14,4 +15,12 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth };
+async function requireAdmin(req, res, next) {
+  const user = await prisma.user.findUnique({ where: { id: req.userId } });
+  if (!user || user.role !== "admin") {
+    return res.status(403).json({ error: "Accès réservé aux administrateurs" });
+  }
+  next();
+}
+
+module.exports = { requireAuth, requireAdmin };

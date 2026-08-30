@@ -2227,7 +2227,6 @@
         .view-wrapper {
             max-width: 1400px;
             margin: 0 auto;
-            padding-top: 80px; /* Espace pour le burger menu */
         }
 
         /* En-tête de chaque vue */
@@ -2283,7 +2282,6 @@
         /* Responsive pour vues */
         @media (max-width: 768px) {
             .view-wrapper {
-                padding-top: 60px;
                 padding-left: 10px;
                 padding-right: 10px;
             }
@@ -2348,6 +2346,37 @@
             }
         }
 
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+            html, body.printing-badges {
+                background: #ffffff !important;
+            }
+            body.printing-badges::before {
+                display: none !important;
+                content: none !important;
+            }
+            body.printing-badges > *:not(#badgePrintArea) {
+                display: none !important;
+            }
+            body.printing-badges #badgePrintArea {
+                display: block !important;
+                background: #ffffff !important;
+            }
+            body.printing-badges .badge-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 4mm !important;
+            }
+            body.printing-badges .badge-card {
+                padding: 3mm !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #cbd5e1;
+            }
+        }
 
     </style>
 </head>
@@ -2443,6 +2472,14 @@
                     <span class="nav-arrow">›</span>
                 </div>
                 <div class="nav-group-items" id="finance-group">
+                    <a href="#" class="nav-item" onclick="navigateTo('employee-stats'); return false;">
+                        <span class="nav-icon-sub">💸</span>
+                        <span class="nav-text">Effectuer un Paiement</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="navigateTo('payments-list'); return false;">
+                        <span class="nav-icon-sub">📋</span>
+                        <span class="nav-text">Liste des Paiements</span>
+                    </a>
                     <a href="#" class="nav-item" onclick="navigateTo('settings'); return false;">
                         <span class="nav-icon-sub">💲</span>
                         <span class="nav-text">Prix par Défaut</span>
@@ -2486,12 +2523,33 @@
                     </a>
                 </div>
             </div>
+
+            <!-- 🔐 ADMINISTRATION (visible uniquement pour les admins) -->
+            <div class="nav-group" id="admin-nav-group" style="display: none;">
+                <div class="nav-group-header" onclick="toggleGroup('admin-group')">
+                    <div class="nav-group-title">
+                        <span class="nav-icon">🔐</span>
+                        <span class="nav-text">Administration</span>
+                    </div>
+                    <span class="nav-arrow">›</span>
+                </div>
+                <div class="nav-group-items" id="admin-group">
+                    <a href="#" class="nav-item" onclick="navigateTo('admin-users'); return false;">
+                        <span class="nav-icon-sub">👤</span>
+                        <span class="nav-text">Gestion des Utilisateurs</span>
+                    </a>
+                </div>
+            </div>
         </nav>
         
         <div class="sidebar-footer">
             <button class="theme-toggle-sidebar" onclick="toggleDarkMode()">
                 <span id="themeIconSidebar">🌙</span>
                 <span id="themeTextSidebar">Mode Sombre</span>
+            </button>
+            <button class="theme-toggle-sidebar" onclick="logout()" style="margin-top: 8px; color: #dc2626;">
+                <span>🚪</span>
+                <span>Déconnexion</span>
             </button>
         </div>
     </div>
@@ -2607,12 +2665,16 @@
                                 </button>
                             </div>
 
+                            <button class="btn success" onclick="printSelectedEmployeeBadges()" style="margin-bottom: 12px;">
+                                🏷️ Imprimer les badges sélectionnés
+                            </button>
                             <div class="success-message" id="employeeManagementSuccessMsg">Opération réussie!</div>
                             <div class="error-message" id="employeeManagementErrorMsg">Une erreur s'est produite!</div>
                             <div class="table-container">
                                 <table id="employeesTable">
                                     <thead>
                                         <tr>
+                                            <th style="width: 40px;"><input type="checkbox" id="selectAllEmployeesCheckbox" onchange="toggleSelectAllEmployees(this)"></th>
                                             <th>👤 Nom Employé</th>
                                             <th>📅 Date d'ajout</th>
                                             <th>📊 Nombre de pesages</th>
@@ -2753,6 +2815,38 @@
                                         </tr>
                                     </thead>
                                     <tbody id="weightsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💰 VUE : LISTE PAIEMENTS -->
+        <div id="view-payments-list" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">💰 Liste des Paiements</h1>
+                    <p class="view-subtitle">Historique complet des paiements</p>
+                </div>
+
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>💵 Tous les Paiements</h2>
+                            <div class="table-container">
+                                <table id="paymentsListTable">
+                                    <thead>
+                                        <tr>
+                                            <th>📅 Date</th>
+                                            <th>👤 Employé</th>
+                                            <th>💰 Montant</th>
+                                            <th>📝 Note</th>
+                                            <th>🛠️ Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="paymentsListTableBody"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -3249,9 +3343,59 @@
             </div>
         </div>
 
+        <!-- 🔐 VUE 15 : GESTION DES UTILISATEURS (admin uniquement) -->
+        <div id="view-admin-users" class="app-view">
+            <div class="view-wrapper">
+                <div class="view-header">
+                    <h1 class="view-title">🔐 Gestion des Utilisateurs</h1>
+                    <p class="view-subtitle">Créer, modifier et supprimer des comptes</p>
+                </div>
+
+                <div class="glass-card">
+                    <div class="content">
+                        <div class="form-section">
+                            <h2>➕ Nouvel Utilisateur</h2>
+                            <div class="success-message" id="adminUserSuccessMsg">Opération réussie!</div>
+                            <div class="error-message" id="adminUserErrorMsg">Une erreur s'est produite!</div>
+                            <div class="form-group">
+                                <input type="text" id="newUserFullName" placeholder="Nom complet">
+                                <input type="email" id="newUserEmail" placeholder="Email">
+                                <input type="password" id="newUserPassword" placeholder="Mot de passe" autocomplete="new-password">
+                                <select id="newUserRole">
+                                    <option value="user">Utilisateur</option>
+                                    <option value="admin">Administrateur</option>
+                                </select>
+                                <button class="btn" onclick="createAdminUser()" style="grid-column: 1 / -1;">Créer l'utilisateur</button>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h2>👥 Comptes Existants</h2>
+                            <div class="table-container">
+                                <table id="adminUsersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>👤 Nom</th>
+                                            <th>📧 Email</th>
+                                            <th>🔐 Rôle</th>
+                                            <th>📅 Créé le</th>
+                                            <th>🛠️ Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminUsersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </div> <!-- ✅ FIN app-container -->
 
+    <div id="badgePrintArea" style="display: none;">
+        <div class="badge-grid" id="badgePrintGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;"></div>
+    </div>
 
     <!-- Modal pour modifier un employé -->
     <div id="editEmployeeModal" class="modal">
@@ -3445,6 +3589,7 @@
         🌙 Dark Mode
     </button>
 
+    <script src="src/services/qrcode.min.js"></script>
     <script src="src/services/api.js"></script>
 
     <script>
@@ -3473,6 +3618,7 @@
         let allEmployees = [];
         let allWeights = [];
         let allPayments = [];
+        let autoEmployeeStatsFilterId = null;
 
         // Charger la liste des paiements
         const loadPayments = async () => {
@@ -3493,42 +3639,49 @@
         let currentEditingPaymentId = null;
         // ⭐ NOUVEAU: Debug database pour vérifier les données
         const debugDatabase = () => {
-            if (!db) {
-                console.error('❌ Base de données pas encore initialisée!');
-                alert('⚠️ Base de données pas encore prête. Patientez...');
-                return;
+            const dateFilter = prompt('Filtrer par date (JJ/MM/AAAA), ou laissez vide pour tout afficher :');
+            const employeeFilter = prompt('Filtrer par nom d\'employé, ou laissez vide pour tout afficher :');
+
+            let weights = allWeights;
+            if (dateFilter) {
+                weights = weights.filter(w => new Date(w.date).toLocaleDateString('fr-FR') === dateFilter);
             }
-            
-            console.log('🔍 ===== DÉBUT VÉRIFICATION BDD =====');
-            
-            const transaction = db.transaction(['weights', 'employees', 'payments'], 'readonly');
-            const weightStore = transaction.objectStore('weights');
-            const employeeStore = transaction.objectStore('employees');
-            const paymentStore = transaction.objectStore('payments');
-            
-            const weightRequest = weightStore.getAll();
-            const employeeRequest = employeeStore.getAll();
-            const paymentRequest = paymentStore.getAll();
-            
-            Promise.all([
-                new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
-                new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); }),
-                new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
-            ]).then(([weights, employees, payments]) => {
-                console.log('👥 EMPLOYÉS (' + employees.length + '):', employees);
-                console.log('⚖️ PESAGES (' + weights.length + '):', weights);
-                console.log('💰 PAIEMENTS (' + payments.length + '):', payments);
-                
-                // Vérifier dates
-                console.log('\n📅 DATES DES PESAGES:');
-                weights.forEach((w, i) => {
-                    const emp = employees.find(e => e.id === w.employeeId);
-                    console.log(`  ${i+1}. ${w.date} - ${emp?.name || 'Inconnu'} - ${w.weight}kg - Note: "${w.note}"`);
-                });
-                
-                console.log('\n🔍 ===== FIN VÉRIFICATION =====');
-                alert('✅ Vérification terminée! Consultez la Console (F12)');
-            });
+            if (employeeFilter) {
+                const needle = employeeFilter.trim().toLowerCase();
+                weights = weights.filter(w => w.employeeName.toLowerCase().includes(needle));
+            }
+
+            console.group('🔍 Vérification base de données');
+
+            console.log(`👥 ${allEmployees.length} employé(s) — 💰 ${allPayments.length} paiement(s) — ⚖️ ${allWeights.length} pesage(s) au total`);
+
+            console.groupCollapsed(`⚖️ Pesages affichés (${weights.length})`);
+            console.table(weights.map(w => ({
+                Date: new Date(w.date).toLocaleDateString('fr-FR'),
+                Employé: w.employeeName,
+                Poids_kg: w.weight,
+                Qualité: w.qualityName,
+                Prix_kg: w.pricePerKg,
+            })));
+            console.groupEnd();
+
+            // Détection d'anomalies
+            const orphanWeights = weights.filter(w => !allEmployees.some(e => e.id === w.employeeId));
+            const invalidWeights = weights.filter(w => !w.weight || w.weight <= 0 || !w.pricePerKg || w.pricePerKg <= 0);
+            const orphanPayments = allPayments.filter(p => !allEmployees.some(e => e.id === p.employeeId));
+
+            if (orphanWeights.length || invalidWeights.length || orphanPayments.length) {
+                console.groupCollapsed('⚠️ Anomalies détectées');
+                if (orphanWeights.length) console.warn(`${orphanWeights.length} pesage(s) sans employé correspondant`, orphanWeights);
+                if (invalidWeights.length) console.warn(`${invalidWeights.length} pesage(s) avec poids/prix invalide`, invalidWeights);
+                if (orphanPayments.length) console.warn(`${orphanPayments.length} paiement(s) sans employé correspondant`, orphanPayments);
+                console.groupEnd();
+            } else {
+                console.log('✅ Aucune anomalie détectée');
+            }
+
+            console.groupEnd();
+            alert(`✅ Vérification terminée (${weights.length} pesage(s) affiché(s)). Consultez la Console (F12).`);
         };
 
         // ⭐ NOUVEAU: Formater l'input du prix par défaut
@@ -3692,6 +3845,7 @@
             'daily-stats': 'view-daily-stats',
             
             // Finances
+            'payments-list': 'view-payments-list',
             'settings': 'view-settings',
             'salary-calc': 'view-salary-calc',
             'salary-repartition': 'view-salary-repartition',
@@ -3700,7 +3854,10 @@
             // Outils
             'search': 'view-search',
             'import-export': 'view-import-export',
-            'database-check': 'view-database-check'
+            'database-check': 'view-database-check',
+
+            // Administration
+            'admin-users': 'view-admin-users'
         };
 
         /**
@@ -3772,9 +3929,17 @@
                 case 'view-weighing-list':
                     loadWeights();
                     break;
+
+                case 'view-payments-list':
+                    displayPaymentsList();
+                    break;
                     
                 case 'view-daily-stats':
                     updateDailyQualityStats();
+                    break;
+
+                case 'view-admin-users':
+                    loadAdminUsers();
                     break;
                     
                 default:
@@ -3953,6 +4118,20 @@
                     if (data.type === 'update') {
                         console.log('🔄 Mise à jour reçue via WebSocket:', data);
                         refreshAllData();
+
+                        // Un nouveau pesage vient d'être créé (téléphone ou saisie directe
+                        // serveur) : confirmer par un toast, puis ouvrir automatiquement la
+                        // Liste des Pesages côté Poste Serveur.
+                        if (data.entity === 'weighing' && data.action === 'create') {
+                            showToast('✅ Pesage reçu et enregistré avec succès', 'success');
+                            navigateTo('weighing-list');
+                        }
+
+                        if (data.entity === 'payment' && data.action === 'create') {
+                            showToast('✅ Paiement enregistré avec succès', 'success');
+                            autoEmployeeStatsFilterId = data.employeeId || null;
+                            navigateTo('employee-stats');
+                        }
                     }
                 } catch (err) {
                     console.error('❌ Erreur message WebSocket:', err.message);
@@ -4098,6 +4277,124 @@
                 .replace(/\r?\n/g, '\\n');
         };
 
+        /* ========================================
+        🔐 ADMINISTRATION DES UTILISATEURS
+        ======================================== */
+
+        const getCurrentUser = () => {
+            try {
+                return JSON.parse(localStorage.getItem('user') || 'null');
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const isAdmin = () => {
+            const user = getCurrentUser();
+            return !!user && user.role === 'admin';
+        };
+
+        const applyAdminVisibility = () => {
+            const group = document.getElementById('admin-nav-group');
+            if (group) group.style.display = isAdmin() ? '' : 'none';
+        };
+
+        const logout = () => {
+            if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        };
+
+        const loadAdminUsers = async () => {
+            const tbody = document.getElementById('adminUsersTableBody');
+            try {
+                const users = await apiFetch('/admin/users');
+                const currentUser = getCurrentUser();
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    const row = document.createElement('tr');
+                    const isSelf = currentUser && currentUser.id === u.id;
+                    row.innerHTML = `
+                        <td>${u.fullName}${isSelf ? ' <em>(vous)</em>' : ''}</td>
+                        <td>${u.email}</td>
+                        <td>${u.role === 'admin' ? '🔐 Admin' : '👤 Utilisateur'}</td>
+                        <td>${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+                        <td>
+                            <button class="edit-btn" onclick="editAdminUser('${u.id}', '${escapeForJsAttr(u.email)}', '${u.role}')">✏️ Modifier</button>
+                            ${isSelf ? '' : `<button class="delete-btn" onclick="deleteAdminUser('${u.id}', '${escapeForJsAttr(u.fullName)}')">🗑️ Supprimer</button>`}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc2626;">${err.message}</td></tr>`;
+            }
+        };
+
+        const createAdminUser = async () => {
+            const fullName = document.getElementById('newUserFullName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!fullName || !email || !password) {
+                showMessage('adminUserErrorMsg', 'Nom, email et mot de passe sont obligatoires!');
+                return;
+            }
+
+            try {
+                await apiFetch('/admin/users', {
+                    method: 'POST',
+                    body: JSON.stringify({ fullName, email, password, role }),
+                });
+                document.getElementById('newUserFullName').value = '';
+                document.getElementById('newUserEmail').value = '';
+                document.getElementById('newUserPassword').value = '';
+                document.getElementById('newUserRole').value = 'user';
+                showMessage('adminUserSuccessMsg', 'Utilisateur créé avec succès!');
+                loadAdminUsers();
+            } catch (err) {
+                showMessage('adminUserErrorMsg', err.message);
+            }
+        };
+
+        const editAdminUser = async (id, currentEmail, currentRole) => {
+            const newEmail = prompt('Email:', currentEmail);
+            if (newEmail === null) return;
+
+            const newRole = prompt('Rôle (admin ou user):', currentRole);
+            if (newRole === null) return;
+
+            const newPassword = prompt('Nouveau mot de passe (laisser vide pour ne pas changer):', '');
+            if (newPassword === null) return;
+
+            try {
+                const body = { email: newEmail.trim(), role: newRole.trim() };
+                if (newPassword) body.password = newPassword;
+                await apiFetch(`/admin/users/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(body),
+                });
+                showMessage('adminUserSuccessMsg', 'Utilisateur modifié avec succès!');
+                loadAdminUsers();
+            } catch (err) {
+                showMessage('adminUserErrorMsg', err.message);
+            }
+        };
+
+        const deleteAdminUser = async (id, name) => {
+            if (!confirm(`Supprimer le compte "${name}" ? Cette action est irréversible.`)) return;
+
+            try {
+                await apiFetch(`/admin/users/${id}`, { method: 'DELETE' });
+                showMessage('adminUserSuccessMsg', 'Utilisateur supprimé avec succès!');
+                loadAdminUsers();
+            } catch (err) {
+                showMessage('adminUserErrorMsg', err.message);
+            }
+        };
+
         // Afficher les options d'employés
         const displayEmployeeOptions = (employees) => {
             const dropdown = document.getElementById('employeeDropdown');
@@ -4176,6 +4473,7 @@
                         `<span class="employee-alert-badge" title="${employee.alertNote}">⚠️ Alerte</span>` : '';
 
                     row.innerHTML = `
+                        <td><input type="checkbox" class="employee-select-checkbox" value="${employee.id}"></td>
                         <td>
                             ${employee.name}
                             ${alertBadge}
@@ -4193,6 +4491,71 @@
                     tbody.appendChild(row);
                 });
         };
+
+        // Cocher/décocher toutes les cases employés d'un coup
+        function toggleSelectAllEmployees(source) {
+            document.querySelectorAll('.employee-select-checkbox').forEach(cb => {
+                cb.checked = source.checked;
+            });
+        }
+
+        // Génère et imprime les badges QR des employés cochés (réutilise la logique de badges.html)
+        function printSelectedEmployeeBadges() {
+            const checked = Array.from(document.querySelectorAll('.employee-select-checkbox:checked'))
+                .map(cb => cb.value);
+
+            if (checked.length === 0) {
+                alert('⚠️ Sélectionnez au moins un employé pour imprimer un badge.');
+                return;
+            }
+
+            const selectedEmployees = allEmployees.filter(emp => checked.includes(emp.id));
+            const grid = document.getElementById('badgePrintGrid');
+            grid.innerHTML = '';
+
+            selectedEmployees.forEach((emp) => {
+                const card = document.createElement('div');
+                card.className = 'badge-card';
+                card.style.cssText = 'background: white; color: #0f172a; border-radius: 12px; padding: 16px; text-align: center;';
+
+                const qrDiv = document.createElement('div');
+                qrDiv.style.cssText = 'display: flex; justify-content: center; margin-bottom: 10px;';
+                card.appendChild(qrDiv);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.style.cssText = 'font-weight: 700; font-size: 1rem;';
+                nameDiv.textContent = emp.name;
+                card.appendChild(nameDiv);
+
+                if (emp.phone) {
+                    const phoneDiv = document.createElement('div');
+                    phoneDiv.style.cssText = 'font-size: 0.8rem; color: #64748b; margin-top: 2px;';
+                    phoneDiv.textContent = emp.phone;
+                    card.appendChild(phoneDiv);
+                }
+
+                grid.appendChild(card);
+
+                        // QR compact pour l'impression (résolution réduite = moins de mémoire, toujours net à ~5cm imprimés)
+                        new QRCode(qrDiv, {
+                            text: emp.id,
+                            width: 100,
+                            height: 100,
+                            colorDark: '#0f172a',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M,
+                        });
+
+                        // qrcodejs laisse un <canvas> caché en plus de l'<img> généré : on le retire
+                        // pour éviter de doubler la mémoire consommée par badge (canvas + image).
+                        const leftoverCanvas = qrDiv.querySelector('canvas');
+                        if (leftoverCanvas) leftoverCanvas.remove();
+                    });
+
+            document.body.classList.add('printing-badges');
+            window.print();
+            document.body.classList.remove('printing-badges');
+        }
 
         function filterManageEmployees() {
             const term = document.getElementById('employeeManageSearch').value
@@ -4309,14 +4672,19 @@
             await checkEmployeeAlert(employeeId, employeeName);
 
             try {
-                await apiFetch('/weighings', {
+                                await apiFetch('/weighings', {
                     method: 'POST',
                     body: JSON.stringify({
                         employeeId,
                         weightKg: parseFloat(weight),
                         qualityName,
                         pricePerKg: qualityPrice,
-                        weighedAt: new Date(date).toISOString(),
+
+                        weighedAt: (() => {
+                            const now = new Date();
+                            const [year, month, day] = date.split('-').map(Number);
+                            return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+                        })(),
                     }),
                 });
 
@@ -4446,6 +4814,30 @@
                 tbody.appendChild(row);
             });
             applyThousandSeparators();
+        };
+
+        // Affiche tous les paiements (réutilise allPayments déjà chargé par loadPayments())
+        const displayPaymentsList = () => {
+            const tbody = document.getElementById('paymentsListTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const sorted = [...allPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sorted.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(p.date).toLocaleDateString('fr-FR')}</td>
+                    <td style="font-weight: 600;">${p.employeeName}</td>
+                    <td style="font-weight: 700; color: #059669;">${p.amount.toLocaleString('fr-FR')} Ar</td>
+                    <td>${p.note || '—'}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editPayment('${p.id}')">✏️ Modifier</button>
+                        <button class="delete-btn" onclick="deletePayment('${p.id}')">🗑️ Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
         };
 
         // Modifier un poids
@@ -4904,6 +5296,7 @@
 
                 const statCard = document.createElement('div');
                 statCard.className = 'employee-stat-card';
+                statCard.dataset.employeeId = employee.id;
 
                 let paymentsHTML = '';
                 if (employeePayments.length > 0) {
@@ -4976,11 +5369,21 @@
                 `;
                 statsContainer.appendChild(statCard);
             });
+
+            // Si un filtre auto est en attente (déclenché après un paiement), le
+            // réappliquer ici : cette fonction est aussi rappelée 1000ms après un
+            // événement WebSocket par refreshAllData(), ce qui régénérait toutes les
+            // cartes et effaçait le filtre appliqué juste après la navigation.
+            if (autoEmployeeStatsFilterId) {
+                filterEmployeeStatsById(autoEmployeeStatsFilterId);
+            }
         };
 
 
         // Recherche intelligente améliorée dans les statistiques
         const filterEmployeeStats = () => {
+            // Une recherche manuelle annule le filtre automatique post-paiement.
+            autoEmployeeStatsFilterId = null;
             const search = document.getElementById('employeeStatsSearch').value
                 .toLowerCase()
                 .normalize('NFD') // retire les accents
@@ -5024,7 +5427,26 @@
             }
         };
 
+        // Filtre fiable par ID employé (utilisé après un paiement, pour garantir une
+        // correspondance exacte même en cas de noms identiques ou proches).
+        // Ne remplace pas filterEmployeeStats() : coexiste pour l'usage recherche textuelle.
+        const filterEmployeeStatsById = (employeeId) => {
+            const statsContainer = document.getElementById('employeeStats');
+            const cards = statsContainer.querySelectorAll('.employee-stat-card');
 
+            cards.forEach(card => {
+                card.style.display = card.dataset.employeeId === employeeId ? '' : 'none';
+            });
+
+            // Nettoyer un éventuel message "aucun résultat" laissé par une recherche précédente
+            const oldMsg = document.getElementById('noResultsMsg');
+            if (oldMsg) oldMsg.remove();
+
+            // Refléter visuellement le nom dans le champ de recherche, sans en dépendre pour le filtre
+            const employee = allEmployees.find(e => e.id === employeeId);
+            const searchInput = document.getElementById('employeeStatsSearch');
+            if (employee && searchInput) searchInput.value = employee.name;
+        };
 
         // Mettre à jour le tableau des salaires par employé
         const updateSalaryTable = () => {
@@ -5222,68 +5644,37 @@
 
         // Exporter les données CSV
         const exportData = () => {
-            const transaction = db.transaction(['weights', 'employees'], 'readonly');
-            const weightStore = transaction.objectStore('weights');
-            const employeeStore = transaction.objectStore('employees');
-            
-            const weightRequest = weightStore.getAll();
-            const employeeRequest = employeeStore.getAll();
-            
-            Promise.all([
-                new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
-                new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); })
-            ]).then(([weights, employees]) => {
-                const employeeMap = {};
-                employees.forEach(emp => {
-                    employeeMap[emp.id] = emp.name;
-                });
-                
-                const csvContent = "data:text/csv;charset=utf-8,"
-                    + "Nom,Poids(kg),Date,Qualité,Prix par kg (Ar),Salaire (Ar)\n"
-                    + weights.map(w => {
-                        const quality = getQualityName(w);
-                        const price = getPriceForWeight(w);
-                        const salary = w.weight * price;
-                        return `${employeeMap[w.employeeId] || 'Inconnu'},${w.weight},${w.date},"${quality}",${price},${salary}`;
-                    }).join("\n");
-                
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `pesage_vanille_${new Date().toISOString().split('T')[0]}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "Nom,Poids(kg),Date,Qualité,Prix par kg (Ar),Salaire (Ar)\n"
+                + allWeights.map(w => {
+                    const quality = getQualityName(w);
+                    const price = getPriceForWeight(w);
+                    const salary = w.weight * price;
+                    return `${w.employeeName},${w.weight},${w.date},"${quality}",${price},${salary}`;
+                }).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `pesage_vanille_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         };
 
         // Exporter les données JSON
         // Exporter les données JSON (version corrigée: inclut payments)
-        const exportJSON = () => {
-            const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readonly');
-            const weightStore = transaction.objectStore('weights');
-            const employeeStore = transaction.objectStore('employees');
-            const priceStore = transaction.objectStore('prices');
-            const paymentStore = transaction.objectStore('payments');
+        const exportJSON = async () => {
+            try {
+                const prices = await apiFetch('/prices');
 
-            const weightRequest = weightStore.getAll();
-            const employeeRequest = employeeStore.getAll();
-            const priceRequest = priceStore.getAll();
-            const paymentRequest = paymentStore.getAll();
-
-            Promise.all([
-                new Promise(resolve => { weightRequest.onsuccess = () => resolve(weightRequest.result); }),
-                new Promise(resolve => { employeeRequest.onsuccess = () => resolve(employeeRequest.result); }),
-                new Promise(resolve => { priceRequest.onsuccess = () => resolve(priceRequest.result); }),
-                new Promise(resolve => { paymentRequest.onsuccess = () => resolve(paymentRequest.result); })
-            ]).then(([weights, employees, prices, payments]) => {
                 const exportData = {
-                    employees: employees,
-                    weights: weights,
+                    employees: allEmployees,
+                    weights: allWeights,
                     prices: prices,
-                    payments: payments,
+                    payments: allPayments,
                     exportDate: new Date().toISOString(),
-                    version: "2.0"
+                    version: "3.0"
                 };
 
                 const dataStr = JSON.stringify(exportData, null, 2);
@@ -5297,9 +5688,9 @@
                 document.body.removeChild(link);
 
                 showMessage('importSuccessMsg', 'Données exportées avec succès!');
-            }).catch(err => {
-                showMessage('importErrorMsg', 'Erreur lors de l\'exportation: ' + (err && err.message));
-            });
+            } catch (err) {
+                showMessage('importErrorMsg', 'Erreur lors de l\'exportation: ' + err.message);
+            }
         };
 
 
@@ -5307,156 +5698,157 @@
         const importJSON = () => {
             const fileInput = document.getElementById('jsonFileInput');
             const file = fileInput.files[0];
-            
+
             if (!file) {
                 showMessage('importErrorMsg', 'Veuillez sélectionner un fichier JSON!');
                 return;
             }
-            
+
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 try {
                     const importData = JSON.parse(e.target.result);
-                    
+
                     if (!importData.employees || !importData.weights) {
                         throw new Error('Format de fichier invalide');
                     }
-                    
-                    // Confirmer l'importation
+
                     if (!confirm('Cette action va remplacer toutes les données existantes. Continuer?')) {
                         return;
                     }
-                    
-                    const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readwrite');
-                    const weightStore = transaction.objectStore('weights');
-                    const employeeStore = transaction.objectStore('employees');
-                    const priceStore = transaction.objectStore('prices');
-                    const paymentStore = transaction.objectStore('payments');
 
-                    // Vider les tables existantes
-                    weightStore.clear();
-                    employeeStore.clear();
-                    priceStore.clear();
-                    paymentStore.clear();
+                    // Vider les données existantes (suppression atomique en masse)
+                    await apiFetch('/employees', { method: 'DELETE' });
+                    await apiFetch('/prices', { method: 'DELETE' });
 
-                    // Importer les employés
-                    importData.employees.forEach(employee => {
-                        employeeStore.add(employee);
-                    });
+                    // Recréer les employés : les ID du JSON ne peuvent pas être réutilisés
+                    // (générés par Prisma), donc on construit une table de correspondance
+                    // ancien ID → nouvel ID pour remapper pesages et paiements ensuite.
+                    const idMap = {};
+                    for (const employee of importData.employees) {
+                        const created = await apiFetch('/employees', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                name: employee.name,
+                                phone: employee.phone,
+                                alertNote: employee.alertNote,
+                            }),
+                        });
+                        idMap[employee.id] = created.id;
+                    }
 
-                    // Importer les poids
-                    importData.weights.forEach(weight => {
-                        weightStore.add(weight);
-                    });
-
-                    // Importer les prix si disponibles
-                    if (importData.prices) {
-                        importData.prices.forEach(price => {
-                            priceStore.add(price);
+                    // Recréer les pesages, avec l'employeeId remappé
+                    for (const weight of importData.weights) {
+                        const newEmployeeId = idMap[weight.employeeId];
+                        if (!newEmployeeId) continue; // pesage orphelin, employé absent du JSON
+                        await apiFetch('/weighings', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                employeeId: newEmployeeId,
+                                weightKg: weight.weight,
+                                qualityName: weight.qualityName,
+                                pricePerKg: weight.pricePerKg,
+                                weighedAt: weight.date,
+                            }),
                         });
                     }
 
-                    // Importer les paiements si disponibles
+                    // Recréer les paiements, avec l'employeeId remappé
                     if (importData.payments) {
-                        importData.payments.forEach(payment => {
-                            paymentStore.add(payment);
-                        });
+                        for (const payment of importData.payments) {
+                            const newEmployeeId = idMap[payment.employeeId];
+                            if (!newEmployeeId) continue;
+                            await apiFetch('/payments', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    employeeId: newEmployeeId,
+                                    amount: payment.amount,
+                                    paidAt: payment.date,
+                                    note: payment.note,
+                                }),
+                            });
+                        }
                     }
 
-                    
-                    transaction.oncomplete = () => {
-                        // â­ Utiliser la fonction de rafraichissement complète
-                        refreshAllViews();
-                        showMessage('importSuccessMsg', 'Données importées avec succé¨s!');
-                        fileInput.value = '';
-                    };
-                    
-                    transaction.onerror = () => {
-                        showMessage('importErrorMsg', 'Erreur lors de l\'importation!');
-                    };
-                    
+                    // Recréer l'historique des prix, en conservant leur date d'origine
+                    if (importData.prices) {
+                        for (const price of importData.prices) {
+                            await apiFetch('/prices', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    pricePerKg: price.pricePerKg,
+                                    effectiveAt: price.effectiveAt,
+                                }),
+                            });
+                        }
+                    }
+
+                    await refreshAllData();
+                    showMessage('importSuccessMsg', 'Données importées avec succès!');
+                    fileInput.value = '';
                 } catch (error) {
-                    showMessage('importErrorMsg', 'Fichier JSON invalide!');
+                    showMessage('importErrorMsg', 'Erreur lors de l\'importation: ' + error.message);
                 }
             };
-            
+
             reader.readAsText(file);
         };
 
         // Remise à zéro complète
-        const resetAllData = () => {
+        const resetAllData = async () => {
             if (!confirm('Êtes-vous sûr de vouloir effectuer une remise à zéro complète? Cette action supprimera TOUTES les données de façon permanente!')) return;
-            
+
             if (!confirm('DERNIÈRE CONFIRMATION: Toutes les données seront perdues définitivement. Continuer?')) return;
-            
-            const transaction = db.transaction(['weights', 'employees', 'prices', 'payments'], 'readwrite');
-            const weightStore = transaction.objectStore('weights');
-            const employeeStore = transaction.objectStore('employees');
-            const priceStore = transaction.objectStore('prices');
-            const paymentStore = transaction.objectStore('payments');
 
-            weightStore.clear();
-            employeeStore.clear();
-            priceStore.clear();
-            paymentStore.clear();
+            try {
+                // Suppression en masse, atomique : une seule requête DELETE côté
+                // serveur (deleteMany), qui entraîne la cascade sur pesages/paiements.
+                // Pas de risque d'état partiellement nettoyé en cas d'échec réseau.
+                await apiFetch('/employees', { method: 'DELETE' });
+                await apiFetch('/prices', { method: 'DELETE' });
+            } catch (err) {
+                alert('❌ Erreur lors de la remise à zéro: ' + err.message);
+                return;
+            }
 
-            
-            transaction.oncomplete = () => {
-                // ⭐ OBLIGATOIRE: Miandry kely alohan'ny refresh
-                setTimeout(() => {
-                    // Réinitialiser prix par défaut
-                    currentPricePerKg = 0;
-                    document.getElementById('currentDefaultPrice').textContent = '0 Ar';
-                    document.getElementById('defaultPricePerKg').value = '';
-                    
-                    // Réinitialiser formulaire pesage
-                    document.getElementById('weight').value = '';
-                    document.getElementById('weighingDate').value = new Date().toISOString().split('T')[0];
-                    document.getElementById('qualityName').value = '';
-                    document.getElementById('qualityPrice').value = '';
-                    document.getElementById('employeeSearchInput').value = '';
-                    document.getElementById('selectedEmployeeId').value = '';
-                    
-                    // Réinitialiser stats quotidiennes
-                    document.getElementById('dailyStatsDate').value = new Date().toISOString().split('T')[0];
-                    document.getElementById('dailyQualityStatsContainer').style.display = 'none';
-                    document.getElementById('noDailyData').style.display = 'none';
-                    
-                    // Effacer filtre employé stats quotidiennes
-                    dailyStatsSelectedEmployee = null;
-                    document.getElementById('dailyStatsEmployeeSearch').value = '';
-                    document.getElementById('selectedEmployeeInfo').style.display = 'none';
-                    
-                    // Réinitialiser recherche employé
-                    document.getElementById('employeeSearchInput').value = '';
-                    document.getElementById('selectedEmployeeId').value = '';
-                    document.getElementById('employeeDropdown').style.display = 'none';
-                    
-                    // Réinitialiser filtres recherche
-                    document.getElementById('nameFilter').value = '';
-                    document.getElementById('selectedFilterEmployeeId').value = '';
-                    document.getElementById('monthFilter').value = '';
-                    document.getElementById('dateFilter').value = '';
-                    document.getElementById('dailySummary').style.display = 'none';
-                    document.getElementById('searchStats').style.display = 'none';
-                    document.getElementById('filterEmployeeDropdown').style.display = 'none';
-                    
-                    // ⭐ RELOAD TOUS LES DONNÉES
-                    loadAllEmployees();
-                    loadWeights();
-                    updateStats();
-                    updateSalaryStats();
-                    updateEmployeeStats();
-                    loadEmployeeManagement();
-                    
-                    alert('✅ Remise à zéro effectuée avec succès!\n\nToutes les données ont été supprimées.');
-                    console.log('✅ Reset terminé et interface mise à jour');
-                }, 100);
-            };
-            
-            transaction.onerror = () => {
-                alert('❌ Erreur lors de la remise à zéro!');
-            };
+            // Réinitialiser prix par défaut
+            currentPricePerKg = 0;
+            document.getElementById('currentDefaultPrice').textContent = '0 Ar';
+            document.getElementById('defaultPricePerKg').value = '';
+
+            // Réinitialiser formulaire pesage
+            document.getElementById('weight').value = '';
+            document.getElementById('weighingDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('qualityName').value = '';
+            document.getElementById('qualityPrice').value = '';
+            document.getElementById('employeeSearchInput').value = '';
+            document.getElementById('selectedEmployeeId').value = '';
+            document.getElementById('employeeDropdown').style.display = 'none';
+
+            // Réinitialiser stats quotidiennes
+            document.getElementById('dailyStatsDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('dailyQualityStatsContainer').style.display = 'none';
+            document.getElementById('noDailyData').style.display = 'none';
+
+            // Effacer filtre employé stats quotidiennes
+            dailyStatsSelectedEmployee = null;
+            document.getElementById('dailyStatsEmployeeSearch').value = '';
+            document.getElementById('selectedEmployeeInfo').style.display = 'none';
+
+            // Réinitialiser filtres recherche
+            document.getElementById('nameFilter').value = '';
+            document.getElementById('selectedFilterEmployeeId').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('dailySummary').style.display = 'none';
+            document.getElementById('searchStats').style.display = 'none';
+            document.getElementById('filterEmployeeDropdown').style.display = 'none';
+
+            // Recharger toutes les données (désormais vides)
+            await refreshAllData();
+
+            alert('✅ Remise à zéro effectuée avec succès!\n\nToutes les données ont été supprimées.');
+            console.log('✅ Reset terminé et interface mise à jour');
         };
 
         // Effacer toutes les données (fonction existante conservée pour compatibilité)
@@ -5496,6 +5888,9 @@
 
             // Connexion WebSocket pour les mises à jour temps réel
             connectWebSocket();
+
+            // Afficher/masquer le menu Administration selon le rôle
+            applyAdminVisibility();
 
             // DÉFINIR D'ABORD TOUTES LES FONCTIONS INTERNES
             
@@ -6070,7 +6465,7 @@
                 updateSalaryTable();
                 updateSalaryByQuality();
                 updateSalaryDetailsTable();
-                alert(`✅ Paiement de ${amount.toLocaleString('fr-FR')} Ar enregistré avec succès!`);
+                
             } catch (err) {
                 console.error('❌ Erreur lors de l\'enregistrement du paiement:', err);
                 alert('❌ Erreur lors de l\'enregistrement du paiement');
@@ -6284,13 +6679,11 @@
                     });
                 });
 
-                // Tableau des salaires : formater les cellules où il y a des montants / kg
-                document.querySelectorAll('#salaryTableBody tr').forEach(tr => {
-                    tr.querySelectorAll('td').forEach(td => {
-                        if (!td) return;
-                        td.textContent = replaceNumbersInString(td.textContent);
-                    });
-                });
+                // Tableau des salaires : déjà correctement formaté (toLocaleString) au
+                // moment du rendu dans updateSalaryTable(). Ne pas re-parser le texte
+                // déjà formaté ici : la regex de replaceNumbersInString peut scinder un
+                // nombre séparé par milliers (ex: "124 000") en plusieurs fragments et
+                // les reformater indépendamment, corrompant l'affichage (ex: "1 240").
 
                 // Liste des poids : formater la colonne poids
                 document.querySelectorAll('#weightsTableBody tr').forEach(tr => {

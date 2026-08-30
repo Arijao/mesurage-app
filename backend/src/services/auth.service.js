@@ -9,7 +9,7 @@ async function register({ fullName, email, password }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({ data: { fullName, email, passwordHash } });
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
-  return { token, user: { id: user.id, fullName: user.fullName, email: user.email } };
+  return { token, user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role } };
 }
 
 async function login({ email, password }) {
@@ -18,7 +18,7 @@ async function login({ email, password }) {
     throw new Error("Identifiants invalides");
   }
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
-  return { token, user: { id: user.id, fullName: user.fullName, email: user.email } };
+  return { token, user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role } };
 }
 
 module.exports = { register, login };

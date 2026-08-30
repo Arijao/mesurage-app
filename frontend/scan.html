@@ -16,7 +16,56 @@
       align-items: center;
       padding: 20px;
     }
+    
     h1 { font-size: 1.2rem; margin-bottom: 16px; }
+
+    #connectionStatus {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    #connectionStatus.connected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+    #connectionStatus.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    #connectionStatus.checking {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+    }
+
+    #confirmToast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      text-align: center;
+      max-width: 90%;
+    }
+    #confirmToast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
 
     #scanner-view {
       display: none;
@@ -40,7 +89,13 @@
       max-width: 420px;
       text-align: center;
     }
-    #start-panel button {
+    #start-panel h3 {
+      font-size: 1rem;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .identify-method-btn {
       width: 100%;
       padding: 16px;
       border: none;
@@ -50,6 +105,62 @@
       font-size: 1.05rem;
       font-weight: 600;
       cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .identify-method-btn.secondary {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(100, 116, 139, 0.3);
+    }
+
+    #search-panel {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+    }
+    #search-panel input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(100, 116, 139, 0.3);
+      background: rgba(15, 23, 42, 0.6);
+      color: #f1f5f9;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    #search-panel input:focus { outline: none; border-color: #3b82f6; }
+    #search-results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .search-result-item {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .search-result-item:active { background: rgba(59, 130, 246, 0.15); }
+    .search-result-name { font-weight: 600; font-size: 1rem; }
+    .search-result-phone { font-size: 0.85rem; color: #94a3b8; margin-top: 2px; }
+    .search-no-results {
+      text-align: center;
+      color: #64748b;
+      padding: 20px;
+      font-size: 0.9rem;
+    }
+    #search-back-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 8px;
     }
     #scan-error {
       color: #f87171;
@@ -170,8 +281,19 @@
 <body>
   <h1>📷 Poste de scan — Pesage / Paiement</h1>
 
+  <div id="connectionStatus" class="checking">🔄 Vérification du serveur...</div>
+  <div id="confirmToast"></div>
+
   <div id="start-panel">
-    <button id="btn-start-scan">📷 Démarrer le scan</button>
+    <h3>Identifier l'employé</h3>
+    <button id="btn-start-scan" class="identify-method-btn">📷 Scanner QR Code</button>
+    <button id="btn-start-search" class="identify-method-btn secondary">🔎 Rechercher un employé</button>
+  </div>
+
+  <div id="search-panel">
+    <input type="text" id="search-input" placeholder="Rechercher un employé..." autocomplete="off">
+    <div id="search-results"></div>
+    <button id="search-back-btn">← Retour</button>
   </div>
   <div id="scanner-view">
     <video id="video" autoplay playsinline muted></video>
@@ -246,6 +368,102 @@
       window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname);
     }
 
+    // Témoin de connexion réelle au Poste Serveur : ping /api/health
+    // (endpoint public, pas de JWT requis — teste la joignabilité du serveur applicatif,
+    // pas seulement l'état Wi-Fi du téléphone).
+    let serverConnected = false;
+
+    async function checkServerConnection() {
+      const statusEl = document.getElementById('connectionStatus');
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const response = await fetch('/api/health', { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          serverConnected = true;
+          statusEl.className = 'connected';
+          statusEl.textContent = '🟢 Poste serveur connecté';
+        } else {
+          throw new Error('Réponse invalide');
+        }
+      } catch (err) {
+        serverConnected = false;
+        statusEl.className = 'disconnected';
+        statusEl.textContent = '🔴 Poste serveur déconnecté';
+      }
+    }
+
+    function showConfirmToast(message) {
+      const toast = document.getElementById('confirmToast');
+      toast.textContent = message;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 3000);
+    }
+
+    // Envoi du pesage avec :
+    // - un timeout dur (10s) : une requête ne peut plus jamais rester bloquée
+    //   indéfiniment (cas du hotspot Android qui coupe le chemin retour sans le
+    //   signaler, tout en ayant déjà transmis la requête au serveur) ;
+    // - une vérification anti-doublon en cas d'échec/timeout : avant de considérer
+    //   la tentative comme un échec, on interroge le serveur pour savoir si ce
+    //   pesage exact a malgré tout été enregistré (c'était bien le cas observé en
+    //   diagnostic : le serveur traite la requête même quand la réponse ne revient
+    //   jamais au téléphone).
+    async function submitWeighingSafely(payload) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const result = await apiFetch('/weighings', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        return result;
+      } catch (err) {
+        // Avant de remonter l'erreur, vérifier si le pesage a quand même été
+        // enregistré côté serveur malgré l'échec apparent côté client.
+        const alreadyRecorded = await findMatchingRecentWeighing(payload);
+        if (alreadyRecorded) {
+          return alreadyRecorded; // succès réel, réponse simplement perdue en route
+        }
+        // Vraie erreur (ou vérification elle-même impossible) : on ne peut pas
+        // garantir l'absence d'enregistrement, mais aucune preuve qu'il existe non
+        // plus — l'utilisateur peut retenter sans risque avéré de doublon.
+        if (err.name === 'AbortError') {
+          throw new Error('Le serveur met trop de temps à répondre (réseau instable). Réessayez.');
+        }
+        throw err;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    // Cherche, parmi les pesages récents de cet employé, un enregistrement identique
+    // (même poids, qualité, prix) créé dans la dernière minute — signe que la requête
+    // a bien abouti côté serveur malgré l'absence de réponse reçue côté client.
+    async function findMatchingRecentWeighing(payload) {
+      try {
+        const recent = await apiFetch(`/weighings?employeeId=${payload.employeeId}`);
+        const cutoff = Date.now() - 60000;
+        return recent.find(w =>
+          Number(w.weightKg) === payload.weightKg &&
+          w.qualityName === payload.qualityName &&
+          Number(w.pricePerKg) === payload.pricePerKg &&
+          new Date(w.weighedAt).getTime() >= cutoff
+        ) || null;
+      } catch (e) {
+        // Impossible de vérifier (serveur injoignable pour de bon) : ne pas
+        // prétendre à un succès qu'on ne peut pas confirmer.
+        return null;
+      }
+    }
+
+    checkServerConnection();
+    setInterval(checkServerConnection, 5000);
+
     const video = document.getElementById('video');
     const scanHint = document.getElementById('scan-hint');
     const scanError = document.getElementById('scan-error');
@@ -255,6 +473,23 @@
 
     let scanning = true;
     let currentStream = null;
+
+    // Liste des employés en mémoire, pour la recherche par nom (méthode
+    // d'identification alternative au QR Code). Chargée une fois au démarrage ;
+    // non bloquante pour le flux QR Code, qui continue de fonctionner même si
+    // ce chargement échoue (ex: token expiré, serveur temporairement injoignable).
+    let allEmployees = [];
+
+    async function loadAllEmployees() {
+        try {
+            allEmployees = await apiFetch('/employees');
+        } catch (err) {
+            console.error('❌ Erreur chargement employés (recherche indisponible):', err.message);
+            allEmployees = [];
+        }
+    }
+
+    loadAllEmployees();
 
     async function startScanner() {
     try {
@@ -353,13 +588,22 @@
      };
     }
 
-    async function openWeighingModal(summary) {
-      const modal = document.getElementById('weighing-modal');
-      document.getElementById('weighing-employee-name').textContent = summary.employee.name;
-      document.getElementById('weighing-weight').value = '';
-      document.getElementById('weighing-quality').value = '';
-      document.getElementById('weighing-total').textContent = '';
-      document.getElementById('weighing-error').style.display = 'none';
+async function openWeighingModal(summary) {
+  const modal = document.getElementById('weighing-modal');
+  document.getElementById('weighing-employee-name').textContent = summary.employee.name;
+  document.getElementById('weighing-weight').value = '';
+  document.getElementById('weighing-quality').value = '';
+  document.getElementById('weighing-total').textContent = '';
+  document.getElementById('weighing-error').style.display = 'none';
+
+  // Réinitialiser le bouton de validation à chaque ouverture du modal : après un
+  // pesage réussi, il restait désactivé (disabled=true, texte "Enregistrement...")
+  // car rien ne le réinitialisait avant la réouverture pour un pesage suivant.
+  // Aucun style CSS ne grise ce bouton quand il est disabled ici, donc le blocage
+  // était invisible : le bouton semblait actif mais ne déclenchait plus son clic.
+  const confirmBtnReset = document.getElementById('weighing-confirm');
+  confirmBtnReset.disabled = false;
+  confirmBtnReset.textContent = 'Valider le pesage';
 
       try {
         const price = await apiFetch('/prices/current');
@@ -382,6 +626,7 @@
       document.getElementById('weighing-cancel').onclick = () => modal.classList.remove('active');
 
       document.getElementById('weighing-confirm').onclick = async () => {
+        const confirmBtn = document.getElementById('weighing-confirm');
         const errorEl = document.getElementById('weighing-error');
         errorEl.style.display = 'none';
         const weightKg = parseFloat(weightEl.value);
@@ -394,22 +639,29 @@
           return;
         }
 
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Enregistrement...';
+
+        const payload = {
+          employeeId: summary.employee.id,
+          weightKg,
+          qualityName,
+          pricePerKg,
+          weighedAt: new Date().toISOString(),
+        };
+
         try {
-          await apiFetch('/weighings', {
-            method: 'POST',
-            body: JSON.stringify({
-              employeeId: summary.employee.id,
-              weightKg,
-              qualityName,
-              pricePerKg,
-              weighedAt: new Date().toISOString(),
-            }),
-          });
+          await submitWeighingSafely(payload);
           modal.classList.remove('active');
+          showConfirmToast('✅ Pesage enregistré avec succès sur le serveur');
           document.getElementById('btn-rescan').click();
         } catch (err) {
           errorEl.textContent = err.message;
           errorEl.style.display = 'block';
+          // Réactiver systématiquement, y compris après un timeout : les données
+          // saisies restent dans les champs, aucune perte de saisie.
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Valider le pesage';
         }
       };
 
@@ -449,7 +701,9 @@
               note: note || undefined,
             }),
           });
+
           modal.classList.remove('active');
+          showConfirmToast('✅ Paiement enregistré avec succès sur le serveur');
           document.getElementById('btn-rescan').click();
         } catch (err) {
           errorEl.textContent = err.message;
@@ -467,6 +721,53 @@
       scanning = true;
       startScanner();
     };
+
+    // Méthode alternative : recherche par nom (ne touche pas au flux QR Code)
+    const searchPanel = document.getElementById('search-panel');
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+
+    document.getElementById('btn-start-search').onclick = () => {
+      startPanel.style.display = 'none';
+      searchPanel.style.display = 'block';
+      searchInput.value = '';
+      searchResults.innerHTML = '';
+      searchInput.focus();
+    };
+
+    document.getElementById('search-back-btn').onclick = () => {
+      searchPanel.style.display = 'none';
+      startPanel.style.display = 'block';
+    };
+
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.trim().toLowerCase();
+      searchResults.innerHTML = '';
+
+      if (term === '') return;
+
+      const matches = allEmployees.filter(emp => emp.name.toLowerCase().includes(term));
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div class="search-no-results">Aucun employé trouvé</div>';
+        return;
+      }
+
+      matches.forEach(emp => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        item.innerHTML = `
+          <div class="search-result-name">${emp.name}</div>
+          ${emp.phone ? `<div class="search-result-phone">${emp.phone}</div>` : ''}
+        `;
+        // Sélection : même point d'entrée que le QR Code, garantit un flux identique.
+        item.onclick = () => {
+          searchPanel.style.display = 'none';
+          onEmployeeScanned(emp.id);
+        };
+        searchResults.appendChild(item);
+      });
+    });
   </script>
 </body>
 </html>
