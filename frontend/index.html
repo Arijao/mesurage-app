@@ -4474,8 +4474,8 @@
 
                     row.innerHTML = `
                         <td><input type="checkbox" class="employee-select-checkbox" value="${employee.id}"></td>
-                        <td>
-                            ${employee.name}
+                        <td class="employee-name-cell" data-employee-name="${escapeHtmlAttr(employee.name)}">
+                            <span class="employee-name-text">${employee.name}</span>
                             ${alertBadge}
                         </td>
                         <td>${new Date(employee.createdAt).toLocaleDateString('fr-FR')}</td>
@@ -4557,28 +4557,68 @@
             document.body.classList.remove('printing-badges');
         }
 
+        // Échappe & < > pour affichage HTML sûr (surbrillance, attributs data-*)
+        const escapeHtmlAttr = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        };
+
+        // Découpe une chaîne originale en segments surlignés, à partir des positions
+        // trouvées dans sa version normalisée (indices alignés : un caractère accentué
+        // composé conserve la même longueur qu'un caractère simple après suppression
+        // des marques combinantes NFD).
+        const highlightMatches = (originalName, normalizedName, term) => {
+            let result = '';
+            let cursor = 0;
+            let idx;
+            while ((idx = normalizedName.indexOf(term, cursor)) !== -1) {
+                result += escapeHtmlAttr(originalName.slice(cursor, idx));
+                result += '<span style="background:yellow; font-weight:bold;">'
+                    + escapeHtmlAttr(originalName.slice(idx, idx + term.length))
+                    + '</span>';
+                cursor = idx + term.length;
+            }
+            result += escapeHtmlAttr(originalName.slice(cursor));
+            return result;
+        };
+
         function filterManageEmployees() {
             const term = document.getElementById('employeeManageSearch').value
                 .toLowerCase()
                 .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '');
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
 
             const rows = document.querySelectorAll('#employeesTableBody tr');
 
             rows.forEach(row => {
-                const cell = row.querySelector('td:first-child');
-                const name = cell.textContent.toLowerCase()
+                const nameCell = row.querySelector('.employee-name-cell');
+                const nameSpan = row.querySelector('.employee-name-text');
+                if (!nameCell || !nameSpan) return;
+
+                const originalName = nameCell.dataset.employeeName || '';
+                const normalizedName = originalName
+                    .toLowerCase()
                     .normalize('NFD')
                     .replace(/[\u0300-\u036f]/g, '');
 
-                if (name.includes(term)) {
+                if (term === '') {
                     row.style.display = '';
-                    // Highlight
-                    const regex = new RegExp(`(${term})`, 'gi');
-                    cell.innerHTML = cell.textContent.replace(regex, '<span style="background:yellow; font-weight:bold;">$1</span>');
-                } else {
-                    row.style.display = 'none';
+                    nameSpan.textContent = originalName;
+                    return;
                 }
+
+                if (!normalizedName.includes(term)) {
+                    row.style.display = 'none';
+                    return;
+                }
+
+                row.style.display = '';
+                nameSpan.innerHTML = highlightMatches(originalName, normalizedName, term);
             });
         }
 

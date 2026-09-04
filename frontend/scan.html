@@ -474,11 +474,9 @@
     let scanning = true;
     let currentStream = null;
 
-    // Liste des employés en mémoire, pour la recherche par nom (méthode
-    // d'identification alternative au QR Code). Chargée une fois au démarrage ;
-    // non bloquante pour le flux QR Code, qui continue de fonctionner même si
-    // ce chargement échoue (ex: token expiré, serveur temporairement injoignable).
     let allEmployees = [];
+    let lastUsedQualityName = '';
+    let lastUsedPricePerKg = null;
 
     async function loadAllEmployees() {
         try {
@@ -592,7 +590,9 @@ async function openWeighingModal(summary) {
   const modal = document.getElementById('weighing-modal');
   document.getElementById('weighing-employee-name').textContent = summary.employee.name;
   document.getElementById('weighing-weight').value = '';
-  document.getElementById('weighing-quality').value = '';
+  // Qualité : conserver la dernière valeur validée par l'opérateur (vide si
+  // aucun pesage n'a encore été fait dans cette session).
+  document.getElementById('weighing-quality').value = lastUsedQualityName;
   document.getElementById('weighing-total').textContent = '';
   document.getElementById('weighing-error').style.display = 'none';
 
@@ -605,11 +605,19 @@ async function openWeighingModal(summary) {
   confirmBtnReset.disabled = false;
   confirmBtnReset.textContent = 'Valider le pesage';
 
-      try {
-        const price = await apiFetch('/prices/current');
-        document.getElementById('weighing-price').value = price.pricePerKg;
-      } catch (e) {
-        document.getElementById('weighing-price').value = '';
+      if (lastUsedPricePerKg !== null) {
+        // Un pesage a déjà été validé dans cette session : on garde le prix
+        // que l'opérateur a saisi la dernière fois, sans réinterroger le serveur.
+        document.getElementById('weighing-price').value = lastUsedPricePerKg;
+      } else {
+        // Tout premier pesage de la session : comportement initial inchangé,
+        // on propose le prix courant du serveur comme valeur de départ.
+        try {
+          const price = await apiFetch('/prices/current');
+          document.getElementById('weighing-price').value = price.pricePerKg;
+        } catch (e) {
+          document.getElementById('weighing-price').value = '';
+        }
       }
 
       const weightEl = document.getElementById('weighing-weight');
@@ -652,6 +660,11 @@ async function openWeighingModal(summary) {
 
         try {
           await submitWeighingSafely(payload);
+          // Mémoriser qualité + prix validés pour préremplir automatiquement
+          // le prochain pesage (nouvel employé), sans affecter cet enregistrement
+          // déjà envoyé : le payload ci-dessus est indépendant et déjà figé.
+          lastUsedQualityName = qualityName;
+          lastUsedPricePerKg = pricePerKg;
           modal.classList.remove('active');
           showConfirmToast('✅ Pesage enregistré avec succès sur le serveur');
           document.getElementById('btn-rescan').click();
