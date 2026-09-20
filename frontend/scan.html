@@ -298,6 +298,7 @@
   <div id="scanner-view">
     <video id="video" autoplay playsinline muted></video>
   </div>
+  <button id="btn-scan-back" class="identify-method-btn secondary" style="display:none; max-width:420px; margin-top:12px;">← Retour</button>
   <div id="scan-hint">Présentez le badge QR de l'employé devant la caméra</div>
   <div id="scan-error"></div>
 
@@ -348,6 +349,7 @@
 
       <label>Montant (Ar)</label>
       <input type="number" id="payment-amount" step="1" min="0">
+      <div id="payment-remaining" class="modal-total"></div>
 
       <label>Note (optionnel)</label>
       <input type="text" id="payment-note" placeholder="ex: avance sur récolte">
@@ -528,6 +530,19 @@
       loop();
     }
 
+    // Bouton "Retour" du panneau de scan : coupe la caméra et la boucle de
+    // détection proprement (même mécanisme que stopCamera()/scanning déjà
+    // utilisés pour le chemin "scan réussi"), puis revient à l'accueil du poste.
+    document.getElementById('btn-scan-back').onclick = () => {
+      scanning = false;
+      stopCamera();
+      scannerView.style.display = 'none';
+      scanHint.style.display = 'none';
+      scanError.style.display = 'none';
+      document.getElementById('btn-scan-back').style.display = 'none';
+      startPanel.style.display = 'block';
+    };
+
     async function onEmployeeScanned(employeeId) {
       scanHint.textContent = 'Chargement...';
       try {
@@ -574,6 +589,7 @@
       stopCamera();
       scannerView.style.display = 'none';
       scanHint.style.display = 'none';
+      document.getElementById('btn-scan-back').style.display = 'none';
       employeePanel.style.display = 'block';
       document.getElementById('employee-name').textContent = summary.employee.name;
       document.getElementById('employee-balance').innerHTML =
@@ -690,6 +706,25 @@ async function openWeighingModal(summary) {
       document.getElementById('payment-note').value = '';
       document.getElementById('payment-error').style.display = 'none';
 
+      // Calcul du solde restant en temps réel : purement affichage local,
+      // basé sur summary.balance (référence fixe capturée à l'ouverture du
+      // modal) — aucune requête réseau, aucune écriture tant que l'opérateur
+      // n'a pas cliqué sur "Valider le paiement".
+      const amountEl = document.getElementById('payment-amount');
+      const remainingEl = document.getElementById('payment-remaining');
+      const updateRemaining = () => {
+        const raw = amountEl.value;
+        if (raw === '') {
+          remainingEl.textContent = '';
+          return;
+        }
+        const amount = parseFloat(raw) || 0;
+        const remaining = summary.balance - amount;
+        remainingEl.textContent = `Solde restant : ${remaining.toLocaleString('fr-FR')} Ar`;
+      };
+      amountEl.oninput = updateRemaining;
+      updateRemaining();
+
       document.getElementById('payment-cancel').onclick = () => modal.classList.remove('active');
 
       document.getElementById('payment-confirm').onclick = async () => {
@@ -731,6 +766,7 @@ async function openWeighingModal(summary) {
       startPanel.style.display = 'none';
       scannerView.style.display = 'block';
       scanHint.style.display = 'block';
+      document.getElementById('btn-scan-back').style.display = 'block';
       scanning = true;
       startScanner();
     };
