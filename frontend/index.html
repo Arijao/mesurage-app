@@ -4782,9 +4782,6 @@
             const qualityName = getQualityName(weightRecord);
             const price = getPriceForWeight(weightRecord);
             
-            // Vérifier si c'est une ancienne donnée (utilise prix par défaut)
-            const isOldData = !weightRecord.note || !weightRecord.note.includes('|');
-            
             // Choisir icône et couleur selon le prix
             let icon = '💎';
             let color = '#059669';
@@ -4807,8 +4804,10 @@
             }
             
             if (price > 0) {
-                const priceLabel = isOldData ? '(Prix par défaut: ' : '(';
-                return `<span style="color: ${color};">${icon}</span> ${qualityName} <span style="color: ${color}; font-weight: 700;">${priceLabel}${price.toLocaleString('fr-FR')} Ar/kg)</span>`;
+                // Le prix affiché est celui effectivement enregistré pour ce pesage
+                // (saisi/validé au poste client), jamais présumé être le prix par
+                // défaut du serveur — libellé neutre pour éviter toute ambiguïté.
+                return `<span style="color: ${color};">${icon}</span> ${qualityName} <span style="color: ${color}; font-weight: 700;">(Prix: ${price.toLocaleString('fr-FR')} Ar/kg)</span>`;
             }
             return `${icon} ${qualityName}`;
         };
