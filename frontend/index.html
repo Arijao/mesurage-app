@@ -3568,6 +3568,68 @@
         </div>
     </div>
 
+        <!-- Modal générique de confirmation (remplace confirm() natif) -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <h3 id="confirmModalTitle">⚠️ Confirmation</h3>
+            <p id="confirmModalMessage" style="color: #475569; margin-bottom: 20px;"></p>
+            <div class="action-buttons">
+                <button class="btn secondary" onclick="closeConfirmModal()">Annuler</button>
+                <button class="btn danger" onclick="runConfirmModalAction()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal "Modifier le pesage" (remplace la chaîne de prompt() natifs) -->
+    <div id="editWeightModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditWeightModal()">&times;</span>
+            <h3>✏️ Modifier le Pesage</h3>
+            <p id="editWeightEmployeeName" style="color: #64748b; margin-bottom: 16px; font-weight: 600;"></p>
+            <div class="modal-input-group">
+                <label for="editWeightWeight">⚖️ Poids (kg)</label>
+                <input type="number" id="editWeightWeight" step="0.1" min="0">
+            </div>
+            <div class="modal-input-group">
+                <label for="editWeightDate">📅 Date</label>
+                <input type="date" id="editWeightDate">
+            </div>
+            <div class="modal-input-group">
+                <label for="editWeightQuality">💎 Qualité</label>
+                <input type="text" id="editWeightQuality">
+            </div>
+            <div class="modal-input-group">
+                <label for="editWeightPrice">💰 Prix par kg (Ar)</label>
+                <input type="number" id="editWeightPrice" step="1" min="0">
+            </div>
+            <div id="editWeightErrorMsg" class="error-message"></div>
+            <div class="action-buttons">
+                <button class="btn secondary" onclick="closeEditWeightModal()">❌ Annuler</button>
+                <button class="btn success" onclick="saveEditWeightModal()">💾 Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal "Note d'alerte employé" (remplace le prompt() natif) -->
+    <div id="editNoteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditNoteModal()">&times;</span>
+            <h3>📝 Note d'Alerte</h3>
+            <p id="editNoteEmployeeName" style="color: #64748b; margin-bottom: 12px; font-weight: 600;"></p>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 16px;">
+                Cette note apparaîtra automatiquement lors de l'enregistrement d'un pesage ou d'un paiement pour cet employé.
+            </p>
+            <div class="modal-input-group">
+                <label for="editNoteText">Note (laisser vide pour supprimer)</label>
+                <textarea id="editNoteText" rows="4" style="width: 100%; padding: 12px 16px; border: 2px solid rgba(203, 213, 225, 0.8); border-radius: 12px; font-size: 1rem; font-family: inherit;"></textarea>
+            </div>
+            <div class="action-buttons">
+                <button class="btn secondary" onclick="closeEditNoteModal()">❌ Annuler</button>
+                <button class="btn success" onclick="saveEditNoteModal()">💾 Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ⭐ MODAL ALERTE EMPLOYÉ -->
     <div id="employeeAlertOverlay" class="alert-overlay" style="display: none;" onclick="closeEmployeeAlert()"></div>
     <div id="employeeAlertModal" class="employee-alert-modal" style="display: none;">
@@ -4879,51 +4941,79 @@
             });
         };
 
-        // Modifier un poids
-        const editWeight = async (id) => {
+                // Modal générique de confirmation (remplace window.confirm())
+        let confirmModalCallback = null;
+        const showConfirmModal = (message, onConfirm, title = '⚠️ Confirmation') => {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMessage').textContent = message;
+            confirmModalCallback = onConfirm;
+            document.getElementById('confirmModal').style.display = 'block';
+        };
+        const closeConfirmModal = () => {
+            document.getElementById('confirmModal').style.display = 'none';
+            confirmModalCallback = null;
+        };
+        const runConfirmModalAction = () => {
+            const callback = confirmModalCallback;
+            closeConfirmModal();
+            if (callback) callback();
+        };
+
+        // Modal "Modifier le pesage" (remplace les prompt() en chaîne)
+        let editWeightTargetId = null;
+        const openEditWeightModal = (id) => {
             const weight = allWeights.find(w => w.id === id);
             if (!weight) return;
+            editWeightTargetId = id;
+            document.getElementById('editWeightEmployeeName').textContent = `Employé : ${weight.employeeName}`;
+            document.getElementById('editWeightWeight').value = weight.weight;
+            document.getElementById('editWeightDate').value = weight.date.split('T')[0];
+            document.getElementById('editWeightQuality').value = weight.qualityName;
+            document.getElementById('editWeightPrice').value = weight.pricePerKg;
+            document.getElementById('editWeightErrorMsg').style.display = 'none';
+            document.getElementById('editWeightModal').style.display = 'block';
+        };
+        const closeEditWeightModal = () => {
+            document.getElementById('editWeightModal').style.display = 'none';
+            editWeightTargetId = null;
+        };
+        const saveEditWeightModal = async () => {
+            const errorEl = document.getElementById('editWeightErrorMsg');
+            errorEl.style.display = 'none';
 
-            const newWeight = prompt(`Modifier le poids pour ${weight.employeeName}:`, weight.weight);
-            if (newWeight === null) return;
-
-            const newDate = prompt('Modifier la date (YYYY-MM-DD):', weight.date.split('T')[0]);
-            if (newDate === null) return;
-
-            const newQuality = prompt('Modifier la qualité:', weight.qualityName);
-            if (newQuality === null) return;
-
-            const newPrice = prompt('Modifier le prix par kg (Ar):', weight.pricePerKg);
-            if (newPrice === null) return;
-
-            const parsedWeight = parseFloat(newWeight);
-            const parsedPrice = parseFloat(newPrice.replace(/\s/g, ''));
+            const parsedWeight = parseFloat(document.getElementById('editWeightWeight').value);
+            const newDate = document.getElementById('editWeightDate').value;
+            const newQuality = document.getElementById('editWeightQuality').value.trim();
+            const parsedPrice = parseFloat(String(document.getElementById('editWeightPrice').value).replace(/\s/g, ''));
 
             if (isNaN(parsedWeight) || parsedWeight < 0) {
-                alert('Poids invalide!');
+                errorEl.textContent = 'Poids invalide!';
+                errorEl.style.display = 'block';
                 return;
             }
-
             if (isNaN(parsedPrice) || parsedPrice < 0) {
-                alert('Prix invalide!');
+                errorEl.textContent = 'Prix invalide!';
+                errorEl.style.display = 'block';
                 return;
             }
-
-            if (!newQuality.trim()) {
-                alert('La qualité est obligatoire!');
+            if (!newQuality) {
+                errorEl.textContent = 'La qualité est obligatoire!';
+                errorEl.style.display = 'block';
                 return;
             }
 
             try {
-                await apiFetch(`/weighings/${id}`, {
+                await apiFetch(`/weighings/${editWeightTargetId}`, {
                     method: 'PATCH',
                     body: JSON.stringify({
                         weightKg: parsedWeight,
-                        qualityName: newQuality.trim(),
+                        qualityName: newQuality,
                         pricePerKg: parsedPrice,
                         weighedAt: new Date(newDate).toISOString(),
                     }),
                 });
+                closeEditWeightModal();
+                showToast('✅ Pesage modifié avec succès', 'success');
                 await loadWeights();
                 updateStats();
                 updateSalaryStats();
@@ -4931,26 +5021,59 @@
                 updateDailySummary();
                 updateDailyQualityStats();
             } catch (err) {
-                alert('Erreur lors de la modification!');
+                errorEl.textContent = 'Erreur lors de la modification!';
+                errorEl.style.display = 'block';
             }
         };
 
-        // Supprimer un poids
-        const deleteWeight = async (id) => {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce pesage?')) return;
-
+        // Modal "Note d'alerte employé" (remplace le prompt())
+        let editNoteTargetId = null;
+        const openEditNoteModal = (id, name, currentNote) => {
+            editNoteTargetId = id;
+            document.getElementById('editNoteEmployeeName').textContent = `Employé : ${name}`;
+            document.getElementById('editNoteText').value = currentNote || '';
+            document.getElementById('editNoteModal').style.display = 'block';
+        };
+        const closeEditNoteModal = () => {
+            document.getElementById('editNoteModal').style.display = 'none';
+            editNoteTargetId = null;
+        };
+        const saveEditNoteModal = async () => {
+            const newNote = document.getElementById('editNoteText').value.trim();
             try {
-                await apiFetch(`/weighings/${id}`, { method: 'DELETE' });
-                await loadWeights();
-                updateStats();
-                updateSalaryStats();
-                updateEmployeeStats();
+                await apiFetch(`/employees/${editNoteTargetId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ alertNote: newNote }),
+                });
+                closeEditNoteModal();
+                await loadAllEmployees();
                 loadEmployeeManagement();
-                updateDailySummary();
-                updateDailyQualityStats();
+                showToast(newNote ? '✅ Note enregistrée' : '✅ Note supprimée', 'success');
             } catch (err) {
-                alert('Erreur lors de la suppression!');
+                showToast('❌ Erreur lors de l\'enregistrement de la note', 'error');
             }
+        };
+
+        // Modifier un poids
+        const editWeight = (id) => openEditWeightModal(id);
+
+        // Supprimer un poids
+        const deleteWeight = (id) => {
+            showConfirmModal('Êtes-vous sûr de vouloir supprimer ce pesage ?', async () => {
+                try {
+                    await apiFetch(`/weighings/${id}`, { method: 'DELETE' });
+                    showToast('✅ Pesage supprimé avec succès', 'success');
+                    await loadWeights();
+                    updateStats();
+                    updateSalaryStats();
+                    updateEmployeeStats();
+                    loadEmployeeManagement();
+                    updateDailySummary();
+                    updateDailyQualityStats();
+                } catch (err) {
+                    showToast('❌ Erreur lors de la suppression', 'error');
+                }
+            });
         };
 
         // Mettre à jour les statistiques
@@ -5901,6 +6024,9 @@
             const weightsModal = document.getElementById('employeeWeightsModal');
             const paymentModal = document.getElementById('paymentModal');
             const editPaymentModal = document.getElementById('editPaymentModal');
+            const confirmModalEl = document.getElementById('confirmModal');
+            const editWeightModalEl = document.getElementById('editWeightModal');
+            const editNoteModalEl = document.getElementById('editNoteModal');
             
             if (event.target === editModal) {
                 closeEditEmployeeModal();
@@ -5913,6 +6039,15 @@
             }
             if (event.target === editPaymentModal) {
                 closeEditPaymentModal();
+            }
+            if (event.target === confirmModalEl) {
+                closeConfirmModal();
+            }
+            if (event.target === editWeightModalEl) {
+                closeEditWeightModal();
+            }
+            if (event.target === editNoteModalEl) {
+                closeEditNoteModal();
             }
         };
 
@@ -7201,31 +7336,7 @@
         //  SYSTÈME D'ALERTE EMPLOYÉ
 
         // Ouvrir modal édition note
-        const editEmployeeNote = async (id, name, currentNote) => {
-            const newNote = prompt(
-                `📝 Note d'alerte pour "${name}"\n\n` +
-                `Cette note apparaîtra automatiquement lors:\n` +
-                `• Enregistrement de pesage\n` +
-                `• Enregistrement de paiement\n\n` +
-                `Note actuelle: ${currentNote || '(aucune)'}\n\n` +
-                `Nouvelle note (laisser vide pour supprimer):`,
-                currentNote || ''
-            );
-
-            if (newNote === null) return; // Annulé
-
-            try {
-                await apiFetch(`/employees/${id}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ alertNote: newNote.trim() }),
-                });
-                await loadAllEmployees();
-                loadEmployeeManagement();
-                alert(newNote.trim() ? '✅ Note enregistrée!' : '✅ Note supprimée!');
-            } catch (err) {
-                alert('❌ Erreur lors de l\'enregistrement de la note.');
-            }
-        };
+        const editEmployeeNote = (id, name, currentNote) => openEditNoteModal(id, name, currentNote);
 
         // Afficher alerte si employé a une note
         const checkEmployeeAlert = (employeeId, employeeName) => {
